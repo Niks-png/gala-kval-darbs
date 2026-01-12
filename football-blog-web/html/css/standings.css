@@ -1,0 +1,107 @@
+body {
+    font-family: system-ui, sans-serif;
+    color: #e5e7eb;
+    padding-right:50px;
+    padding-left:50px
+  }
+  
+  .standings-container {
+    max-width: 900px;
+    min-height: 575px;
+    height: 100%;
+    margin: auto;
+    background: #020617;
+    padding: 20px;
+    border-radius: 16px;
+  }
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .standings {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .standings th,
+  .standings td {
+    padding: 12px;
+    border-bottom: 1px solid #1e293b;
+  }
+  
+  .team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .team img {
+    width: 22px;
+  }
+  
+  .points {
+    font-weight: bold;
+    color: #22c55e;
+  }
+  
+  .refresh {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    color: #38bdf8;
+    text-decoration: none;
+  }
+  .table-wrapper {
+    max-height: 350px; 
+    overflow-y: auto; 
+    margin-bottom: 15px;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+  }
+  
+  .standings thead th {
+    position: sticky;
+    top: 0;
+    background: #020617;
+    z-index: 1;
+  }
+  @media (max-width: 1518px){
+    .table-wrapper{
+      max-height: 300px;
+    }
+  
+  @media (max-width: 1400px){
+    .news-container{
+      width:100%;
+    }
+    .standings-container{
+      max-width: 100%;
+    }
+    .table-wrapper{
+      max-height: 400px;
+    }
+  }
+}
+  @media (max-width: 927px){
+    .table-wrapper{
+      max-height: 350px;
+    }
+  @media (max-width: 665px){
+    .table-wrapper{
+      max-height: 350px;
+    }
+  }
+    @media (max-width: 614px){
+      .table-wrapper{
+        max-height: 300px;
+      }
+    }
+    @media (max-width: 421px){
+      .table-wrapper{
+        max-height: 230px;
+      }
+    }
+}
+  

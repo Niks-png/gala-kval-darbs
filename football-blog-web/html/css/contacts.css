@@ -1,0 +1,732 @@
+.search-function {
+    position: relative;
+    max-width: 500px;
+    grid-column: 4 / 6;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    margin-top:20px;
+    margin-bottom:20px;
+  }
+  #searchInput {
+    width: 100%;
+    padding: 12px;
+    
+    font-size: 16px;
+    border: 2px solid black;
+    border-radius: 1.5em;
+  
+  }
+  #searchResults {
+    margin-top: 10px;
+    position: absolute;
+    top: 42px;
+    width: 217px;
+    background: white;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+  
+  }
+  
+  .result-item a {
+    display: block;
+    padding: 10px;
+    color: black;
+    text-decoration: none;
+    font-size:18px;
+    color: black;
+    padding: 12px 16px;
+    display: block;
+    text-decoration: none;
+    font-family: 'Haelvetica';
+  }
+  
+  .result-item a:hover {
+    box-shadow:
+    inset 0px -6px 18px -6px rgba(3, 15, 20, 1),
+    inset 0px 6px 18px -6px rgba(3, 15, 20, 1),
+    inset 12px 0px 12px -6px rgba(3, 15, 20, 0),
+    inset -12px 0px 12px -6px rgba(3, 15, 20, 0),
+    -1px -1px 6px 0px rgba(54, 69, 75, 1);
+  }
+  
+  #searchResults p {
+    padding: 10px;
+    margin: 0;
+    color: #666;
+  }
+  p {
+    font-size: 20px;
+    margin-top: 10px;
+    margin-bottom:10px;
+  }
+  body {
+    margin: 0;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+  .contact-container {
+    max-width: 500px;
+    margin: 60px auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  h1 {
+    text-align: center;
+    font-size: 50px;
+    font-family: "Arial Black", sans-serif;
+    margin: 15px;
+    color: #007bff;
+  }
+  
+  p {
+    text-align: center;
+    color: white;
+  }
+  
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  input,
+  textarea {
+    padding: 12px;
+    border-radius: 8px;
+    background: #1c212b;
+    color: #e6e6e6;
+    border-color: #2a2f3a;
+    border: 1px solid #2a2f3a;
+  }
+  
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+  
+  #status {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+  }
+  header.hero {
+    background: url("https://www.shutterstock.com/image-photo/sports-stadium-lights-background-textured-600nw-2224117381.jpg")
+      no-repeat center center/cover;
+    color: #fff;
+    text-align: center;
+    padding: 120px 20px 80px;
+    margin-top:10px;
+  }
+  
+  header.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+  }
+  
+  header.hero p {
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  section {
+    padding: 60px 20px;
+    text-align: center;
+  }
+  
+  section h2 {
+    font-size: 2rem;
+    margin-bottom: 40px;
+    color: white;
+  }
+  
+  .info-cards {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .info-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px 20px;
+    max-width: 250px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .info-card img {
+    width: 50px;
+    margin-bottom: 15px;
+  }
+  
+  .info-card h3 {
+    margin: 10px 0;
+    color: #007bff;
+  }
+  
+  .info-card a {
+    text-decoration: none;
+    color: white;
+  }
+  
+  .info-card a:hover {
+    color: #007bff;
+  }
+  
+  .info-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  }
+  
+  .contact-form form {
+    max-width: 600px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .contact-form input,
+  .contact-form textarea {
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .contact-form button {
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    background: #007bff;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .contact-form button:hover {
+    background: #0056b3;
+  }
+  
+  footer {
+    background: #222;
+    color: #fff;
+    text-align: center;
+    padding: 30px 20px;
+    font-size: 0.9rem;
+  }
+  
+  button {
+    padding: 10px 25px;
+    background-color:white;
+  }
+  
+  button:hover {
+    color: white;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  .viss {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 120px 150px;
+  }
+  
+  .virsraksts {
+    grid-column: 1 / 4;
+    display: flex;
+    color: #2c3133;
+    padding-left: 100px;
+    border-bottom: 2px solid #2a2f3a;;
+  }
+  
+  .search {
+    grid-column: 4 / 6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 2px solid #2a2f3a;;
+    width: 100%;
+  }
+  
+  .pages {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 2px solid #2a2f3a;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .home {
+    padding-right: 30px;
+    font-family: "Haelvetica";
+    cursor: pointer;
+  }
+  .homebutton {
+    font-family: "Haelvetica";
+    cursor: pointer;
+  }
+  .news {
+    padding-right: 30px;
+    padding-left: 30px;
+    font-family: "Haelvetica";
+    cursor: pointer;
+  }
+  .about {
+    padding-left: 30px;
+    font-family: "Haelvetica";
+    cursor: pointer;
+  }
+  .dropbtn {
+    background: var(--color-back);
+    border-radius: 0.5em;
+    box-shadow: inset 0px -6px 18px -6px rgba(3, 15, 20, 0),
+      inset rgba(54, 69, 75, 1) -1px -1px 6px 0px,
+      inset 12px 0px 12px -6px rgba(3, 15, 20, 0),
+      inset -12px 0px 12px -6px rgba(3, 15, 20, 0),
+      rgba(54, 69, 75, 1) -1px -1px 6px 0px;
+    border: solid 2px #030f14;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0.7em 1.7em;
+    outline: none;
+    transition: all 0.3s;
+    user-select: none;
+  }
+  .dropbtn:hover {
+    box-shadow: inset 0px -6px 18px -6px rgba(3, 15, 20, 1),
+      inset 0px 6px 18px -6px rgba(3, 15, 20, 1),
+      inset 12px 0px 12px -6px rgba(3, 15, 20, 0),
+      inset -12px 0px 12px -6px rgba(3, 15, 20, 0),
+      -1px -1px 6px 0px rgba(54, 69, 75, 1);
+  }
+  dropbtn:active {
+    box-shadow: inset 0px -12px 12px -6px rgba(3, 15, 20, 1),
+      inset 0px 12px 12px -6px rgba(3, 15, 20, 1),
+      inset 12px 0px 12px -6px rgba(3, 15, 20, 1),
+      inset -12px 0px 12px -6px rgba(3, 15, 20, 1),
+      -1px -1px 6px 0px rgba(54, 69, 75, 1);
+  }
+  .dropdown {
+    position: relative;
+    display: inline-block;
+    padding-left:30px;
+  }
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 160px;
+    overflow: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+  }
+  
+  .dropdown-content a {
+    font-size: 18px;
+    color: black;
+    padding: 12px 16px;
+    display: block;
+    text-decoration: none;
+    font-family: "Haelvetica";
+  }
+  
+  .dropdown a:hover {
+    box-shadow: inset 0px -6px 18px -6px rgba(3, 15, 20, 1),
+      inset 0px 6px 18px -6px rgba(3, 15, 20, 1),
+      inset 12px 0px 12px -6px rgba(3, 15, 20, 0),
+      inset -12px 0px 12px -6px rgba(3, 15, 20, 0),
+      -1px -1px 6px 0px rgba(54, 69, 75, 1);
+  }
+  
+  .show {
+    display: block;
+  }
+  .contacts {
+    padding-left: 30px;
+    font-family: "Haelvetica";
+    cursor: pointer;
+  }
+  .button-22 {
+    background: var(--color-back);
+    border-radius: 0.5em;
+    box-shadow: inset 0px -6px 18px -6px rgba(3, 15, 20, 0),
+      inset rgba(54, 69, 75, 1) -1px -1px 6px 0px,
+      inset 12px 0px 12px -6px rgba(3, 15, 20, 0),
+      inset -12px 0px 12px -6px rgba(3, 15, 20, 0),
+      rgba(54, 69, 75, 1) -1px -1px 6px 0px;
+    border: solid 2px #030f14;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0.7em 1.7em;
+    outline: none;
+    transition: all 0.3s;
+    user-select: none;
+  }
+  
+  .button-22:active {
+    box-shadow: inset 0px -12px 12px -6px rgba(3, 15, 20, 1),
+      inset 0px 12px 12px -6px rgba(3, 15, 20, 1),
+      inset 12px 0px 12px -6px rgba(3, 15, 20, 1),
+      inset -12px 0px 12px -6px rgba(3, 15, 20, 1),
+      -1px -1px 6px 0px rgba(54, 69, 75, 1);
+  }
+  
+  .button-22:hover {
+    box-shadow: inset 0px -6px 18px -6px rgba(3, 15, 20, 1),
+      inset 0px 6px 18px -6px rgba(3, 15, 20, 1),
+      inset 12px 0px 12px -6px rgba(3, 15, 20, 0),
+      inset -12px 0px 12px -6px rgba(3, 15, 20, 0),
+      -1px -1px 6px 0px rgba(54, 69, 75, 1);
+  }
+  
+  * {
+    border: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  :root {
+    font-size: calc(16px + (24 - 16) * (100vw - 320px) / (1920 - 320));
+  }
+  
+  .search-bar {
+    margin-left: 100px;
+    margin-right:30px;
+    justify-content: right;
+    max-width: 30em;
+    display: flex;
+  }
+  .search-bar input {
+    border-radius: 1.5em; 
+  }
+  
+  .search-bar input:focus,
+  .search-bar input:valid {
+    background: #fff;
+    box-shadow: 0 0 0 0.1em black inset;
+    transform: scale(1);
+  }
+  
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    display: inline-block;
+    border: 1px solid #ccc;
+    background: white;
+  }
+  img {
+    cursor: pointer;
+  }
+  
+  input[type="text"]:focus,
+  input[type="password"]:focus {
+    outline: none;
+    border: 1px solid black;
+  }
+  
+  .logout {
+    display: flex;
+    grid-column: 6 / 7;
+    grid-row: 1 / 2;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 2px solid #2a2f3a;;
+    border-left: 2px solid #2a2f3a;;
+  }
+  mark {
+    background-color: yellow;
+    color: black;
+    padding: 2px;
+    border-radius: 3px;
+  }
+  @media (max-width: 1024px) {
+    body {
+      padding: 20px;
+    }
+  
+    .viss {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  
+    .virsraksts {
+      grid-column: 1 / -2;
+      padding: 10px 0;
+    }
+  
+    .search {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: center;
+      padding: 10px 0;
+    }
+  
+    .search-bar {
+      width: 100%;
+      max-width: 400px;
+      font-size: 16px;
+      padding: 12px 16px;
+      margin:0;
+    }
+  
+    button {
+      padding: 14px 22px;
+      font-size: 16px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    header.hero h1 {
+      font-size: 2.2rem;
+    }
+  
+    .info-cards {
+      flex-direction: column;
+      align-items: center;
+    }
+    body {
+      padding: 12px;
+    }
+  
+    .viss {
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    }
+  
+    .pages {
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+  
+    .pages a,
+    .pages button {
+      width: 100%;
+      min-width: 200px;
+      max-width:200px;
+      text-align: center;
+      padding: 16px 0;
+      font-size: 18px;
+      border-radius: 10px;
+    }
+  
+    .search-bar {
+      width: 100%;
+      font-size: 18px;
+      padding: 14px 18px;
+    }
+    .home,
+    .news,
+    .about,
+    .contacts,
+    .dropdown{
+       margin:0;
+      padding:0;
+    }
+  
+  }
+  
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 1.8rem;
+    }
+  
+    .pages a,
+    .pages button {
+      font-size: 19px;
+      margin:0;
+    }
+  
+    .home,
+    .news,
+    .about,
+    .contacts,
+    .dropdown{
+      font-size: 16px;
+       margin:0;
+      padding:0;
+    }
+  
+    button {
+      min-height: 52px; 
+    }
+  }
+
+  
+    body {
+      background-color: #0f1115;
+      color: #e6e6e6;
+    }
+  
+    .header,
+    footer,
+    .info-card,
+    .contact-container{
+      background-color: #141720;
+      color: #e6e6e6;
+    }
+  
+    .virsraksts,
+    .search,
+    .pages,
+    .logout
+    {
+      border-color: #2a2f3a;
+    }
+  
+    
+    h1
+    {
+      color: #007bff;
+    }
+    h2{
+      font-family: "Arial Black", sans-serif;
+      margin: 15px;
+      font-size: 50px;
+      color: #e6e6e6;
+    }
+  
+  
+    .card {
+      background: #1a1e27;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+  
+    .card p {
+      color: #bfc6d4;
+    }
+  
+  
+    #searchInput,
+    .search-bar input,
+    input[type="text"],
+    input[type="password"] {
+      background: #1c212b;
+      color: #e6e6e6;
+      border-color: #2a2f3a;
+      
+    }
+  
+    #searchInput::placeholder {
+      color: #9aa3b2;
+    }
+  
+   
+    #searchResults {
+      background: #1a1e27;
+      border: 1px solid #2a2f3a;
+    }
+  
+    .result-item a {
+      color: #e6e6e6;
+    }
+  
+    .result-item a:hover {
+      background: #232836;
+    }
+  
+    #searchResults p {
+      color: #9aa3b2;
+    }
+  
+   
+    .dropdown-content {
+      background: #1a1e27;
+      border: 1px solid #2a2f3a;
+    }
+  
+    .dropdown-content a {
+      color: #e6e6e6;
+    }
+  
+  
+    .dropbtn,
+    .button-22 {
+      background: #1c212b;
+      color: #e6e6e6;
+      border-color: #2a2f3a;
+    }
+    button{
+      background:none;
+    }
+    .dropbtn:hover,
+    .button-22:hover {
+      background: #232836;
+    }
+  
+  
+    a:hover {
+      color: #9db7ff;
+    }
+  
+   
+    mark {
+      background: #ffd54f;
+      color: #000;
+    }
+  
+  
+  .logout-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.25s ease, filter 0.25s ease;
+  }
+  
+  
+  .logout-icon {
+    display: block;
+    color: #1c1f29; 
+    transition: transform 0.25s ease, filter 0.25s ease, color 0.25s ease;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.2));
+  }
+  
+  
+  .logout-container:hover .logout-icon {
+    transform: scale(1.2) rotate(5deg);
+    filter: drop-shadow(0 0 12px rgba(79, 172, 254, 0.6))
+            drop-shadow(0 0 8px rgba(0, 242, 254, 0.4));
+    color: #4facfe; 
+  }
+  
+  
+  .logout-container:active .logout-icon {
+    transform: scale(1.1) rotate(0deg);
+    filter: drop-shadow(0 0 8px rgba(79, 172, 254, 0.5));
+  }
+  
+  
+ 
+    .logout-icon circle {
+      stroke: url(#grad-dark);
+    }
+  
+    .logout-icon {
+      color: #e6e6e6;
+    }
+  
+    .logout-container:hover .logout-icon {
+      color: #6a11cb;
+      filter: drop-shadow(0 0 12px rgba(106, 17, 203, 0.6))
+              drop-shadow(0 0 8px rgba(37, 117, 252, 0.4));
+    }
+  
+  
+  
+  

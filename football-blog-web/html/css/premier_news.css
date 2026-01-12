@@ -1,0 +1,219 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f8f8f8;
+    margin: 0;
+  }
+  
+  .news-container {
+    width: 60%;
+    background: #020617;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+  }
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #d71920; 
+    font-size:50px;
+    font-family: 'Arial Black', sans-serif;
+    margin:15px;
+  }
+  
+  .news-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .news-list li {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+  }
+  
+  
+  
+  .news-list li a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+  }
+  
+  .news-list li a:hover {
+    text-decoration: underline;
+  }
+  
+  .news-list li small {
+    color: #999;
+    margin-left: 8px;
+  }
+  @media (max-width: 1400px){
+    .news-container{
+      width:100%;
+    }
+    
+  }
+
+  
+    body {
+      background-color: #0f1115;
+      color: #e6e6e6;
+    }
+    h2{
+      color: black;
+    }
+  
+   
+    .header,
+    footer {
+      background-color: #141720;
+      color: #e6e6e6;
+    }
+  
+    .virsraksts,
+    .search,
+    .pages,
+    .logout {
+      border-color: #2a2f3a;
+    }
+  
+  
+    h1
+    {
+      color: #007bff;
+    }
+    h2{
+      font-family: "Arial Black", sans-serif;
+      margin: 15px;
+      font-size: 50px;
+      color: white;
+    }
+  
+   
+    .card {
+      background: #1a1e27;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+  
+    .card p {
+      color: #bfc6d4;
+    }
+  
+    
+    #searchInput,
+    .search-bar input,
+    input[type="text"],
+    input[type="password"] {
+      background: #1c212b;
+      color: #e6e6e6;
+      border-color: #2a2f3a;
+    }
+  
+    #searchInput::placeholder {
+      color: #9aa3b2;
+    }
+  
+   
+    #searchResults {
+      background: #1a1e27;
+      border: 1px solid #2a2f3a;
+    }
+  
+    .result-item a {
+      color: #e6e6e6;
+    }
+  
+    .result-item a:hover {
+      background: #232836;
+    }
+  
+    #searchResults p {
+      color: #9aa3b2;
+    }
+  
+   
+    .dropdown-content {
+      background: #1a1e27;
+      border: 1px solid #2a2f3a;
+    }
+  
+    .dropdown-content a {
+      color: #e6e6e6;
+    }
+  
+    .dropbtn,
+    .button-22 {
+      background: #1c212b;
+      color: #e6e6e6;
+      border-color: #2a2f3a;
+    }
+    button{
+      background:none;
+    }
+    .dropbtn:hover,
+    .button-22:hover {
+      background: #232836;
+    }
+  
+    a:hover {
+      color: #9db7ff;
+    }
+  
+    mark {
+      background: #ffd54f;
+      color: #000;
+    }
+  
+  
+  .logout-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.25s ease, filter 0.25s ease;
+  }
+  
+  
+  .logout-icon {
+    display: block;
+    color: #1c1f29; 
+    transition: transform 0.25s ease, filter 0.25s ease, color 0.25s ease;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.2));
+  }
+  
+  
+  .logout-container:hover .logout-icon {
+    transform: scale(1.2) rotate(5deg);
+    filter: drop-shadow(0 0 12px rgba(79, 172, 254, 0.6))
+            drop-shadow(0 0 8px rgba(0, 242, 254, 0.4));
+    color: #4facfe; 
+  }
+  
+  
+  .logout-container:active .logout-icon {
+    transform: scale(1.1) rotate(0deg);
+    filter: drop-shadow(0 0 8px rgba(79, 172, 254, 0.5));
+  }
+  
+  
+ 
+    .logout-icon circle {
+      stroke: url(#grad-dark);
+    }
+  
+    .logout-icon {
+      color: #e6e6e6;
+    }
+  
+    .logout-container:hover .logout-icon {
+      color: #6a11cb;
+      filter: drop-shadow(0 0 12px rgba(106, 17, 203, 0.6))
+              drop-shadow(0 0 8px rgba(37, 117, 252, 0.4));
+    }
+  
+  
+  
+  
+  

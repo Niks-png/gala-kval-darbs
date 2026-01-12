@@ -1,0 +1,38 @@
+body {
+    font-family: Arial;
+     background-color: #0f1115;
+  }
+  
+  .box {
+    max-width: 700px;
+    margin: 40px auto;
+    background-color: #141720;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .msg {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+  }
+  
+  .msg:last-child {
+    border-bottom: none;
+  }
+  
+  .time {
+    color: #888;
+    font-size: 12px;
+  }
+  button{
+    color:white;
+    background:red;
+    cursor:pointer;
+  }
+  h2{
+    color:white;
+  }
+  p{
+    color:white;
+  }
