@@ -7,18 +7,16 @@
         <flux:sidebar sticky collapsible="desktop" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate class="in-data-flux-sidebar-collapsed-desktop:hidden" />
-                <flux:sidebar.collapse />
+                <flux:sidebar.collapse class="in-data-flux-sidebar-collapsed-desktop:opacity-100 in-data-flux-sidebar-collapsed-desktop:static" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="book-open-text" :href="route('recipes')" :current="request()->routeIs('recipes')" wire:navigate>
-                        Receptes
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                    {{ __('Dashboard') }}
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="book-open-text" :href="route('recipes')" :current="request()->routeIs('recipes')" wire:navigate>
+                    Receptes
+                </flux:sidebar.item>
             </flux:sidebar.nav>
 
             <flux:spacer />
