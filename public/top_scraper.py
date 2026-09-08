@@ -1,4 +1,5 @@
 import csv
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 url = "https://etop.lv/lv/visi-akcijas-produkti"
+store = "etop.lv"
 output_file = Path(__file__).with_name("top_products.csv")
 product_card_class = "product-card-wrap"
 
@@ -88,13 +90,14 @@ for product in products:
     all_items.append(
         {
             "title": title,
+            "store": store,
             "original_price": original_price,
             "current_price": current_price,
         }
     )
 
 with output_file.open("w", newline="", encoding="utf-8") as csvfile:
-    fieldnames = ["title", "original_price", "current_price"]
+    fieldnames = ["title", "store", "original_price", "current_price"]
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(all_items)
@@ -102,7 +105,22 @@ with output_file.open("w", newline="", encoding="utf-8") as csvfile:
 print(f"Saved {len(all_items)} products to {output_file.name}")
 
 project_root = output_file.parent.parent
+php_executable = shutil.which("php")
+if php_executable is None:
+    laragon_php_versions = sorted(Path("C:/laragon/bin/php").glob("*/php.exe"))
+    if laragon_php_versions:
+        php_executable = str(laragon_php_versions[-1])
+    else:
+        raise RuntimeError("PHP executable not found. Add PHP to PATH before running the scraper.")
+
 subprocess.run(
-    ["php", str(project_root / "artisan"), "products:import", str(output_file)],
+    [
+        php_executable,
+        str(project_root / "artisan"),
+        "products:import",
+        str(output_file),
+        "--store",
+        store,
+    ],
     check=True,
 )

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['title', 'original_price', 'current_price'])]
+#[Fillable(['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit'])]
 class Product extends Model
 {
     /**
@@ -17,6 +17,7 @@ class Product extends Model
     {
         return [
             'current_price' => 'decimal:2',
+            'unit_price' => 'decimal:2',
         ];
     }
 }

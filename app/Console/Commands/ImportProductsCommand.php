@@ -12,7 +12,9 @@ class ImportProductsCommand extends Command
     /**
      * @var string
      */
-    protected $signature = 'products:import {file=public/top_products.csv : The CSV file containing scraped products}';
+    protected $signature = 'products:import
+        {file=public/top_products.csv : The CSV file containing scraped products}
+        {--store= : Store name used when importing a legacy CSV without a store column}';
 
     /**
      * @var string
@@ -36,8 +38,17 @@ class ImportProductsCommand extends Command
         $file->setFlags(SplFileObject::READ_CSV | SplFileObject::SKIP_EMPTY);
 
         $header = $file->fgetcsv();
-        if ($header !== ['title', 'original_price', 'current_price']) {
-            throw new RuntimeException('The product CSV must contain title, original_price, and current_price columns.');
+        $hasStoreColumn = $header === ['title', 'store', 'original_price', 'current_price'];
+        $hasUnitColumns = $header === ['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit'];
+        $legacyHeader = ['title', 'original_price', 'current_price'];
+
+        if (! $hasStoreColumn && ! $hasUnitColumns && $header !== $legacyHeader) {
+            throw new RuntimeException('The product CSV has an unsupported header.');
+        }
+
+        $storeOption = trim((string) $this->option('store'));
+        if (! $hasStoreColumn && ! $hasUnitColumns && $storeOption === '') {
+            throw new RuntimeException('The --store option is required when importing a legacy product CSV.');
         }
 
         $products = [];
@@ -48,17 +59,32 @@ class ImportProductsCommand extends Command
                 continue;
             }
 
-            [$title, $originalPrice, $currentPrice] = array_pad($row, 3, null);
+            if ($hasUnitColumns) {
+                [$title, $store, $originalPrice, $currentPrice, $unitPrice, $unit] = array_pad($row, 6, null);
+            } elseif ($hasStoreColumn) {
+                [$title, $store, $originalPrice, $currentPrice] = array_pad($row, 4, null);
+                $unitPrice = null;
+                $unit = null;
+            } else {
+                [$title, $originalPrice, $currentPrice] = array_pad($row, 3, null);
+                $store = $storeOption;
+                $unitPrice = null;
+                $unit = null;
+            }
             $title = trim((string) $title);
+            $store = trim((string) $store);
 
-            if ($title === '') {
+            if ($title === '' || $store === '') {
                 continue;
             }
 
             $products[] = [
                 'title' => $title,
+                'store' => $store,
                 'original_price' => $this->nullableValue($originalPrice),
                 'current_price' => $this->nullablePrice($currentPrice),
+                'unit_price' => $this->nullablePrice($unitPrice),
+                'unit' => $this->nullableValue($unit),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -67,8 +93,8 @@ class ImportProductsCommand extends Command
         if ($products !== []) {
             Product::upsert(
                 $products,
-                ['title'],
-                ['original_price', 'current_price', 'updated_at'],
+                ['title', 'store'],
+                ['original_price', 'current_price', 'unit_price', 'unit', 'updated_at'],
             );
         }
 
