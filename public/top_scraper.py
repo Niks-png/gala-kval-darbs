@@ -1,4 +1,5 @@
 import csv
+import subprocess
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -99,3 +100,9 @@ with output_file.open("w", newline="", encoding="utf-8") as csvfile:
     writer.writerows(all_items)
 
 print(f"Saved {len(all_items)} products to {output_file.name}")
+
+project_root = output_file.parent.parent
+subprocess.run(
+    ["php", str(project_root / "artisan"), "products:import", str(output_file)],
+    check=True,
+)

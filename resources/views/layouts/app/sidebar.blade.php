@@ -30,23 +30,6 @@
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
-        <flux:header container class="hidden border-b border-zinc-200 bg-zinc-50 lg:flex dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:spacer />
-            <div class="flex w-full max-w-2xl items-center gap-2">
-                <label for="product-search" class="sr-only">Meklēt preci</label>
-                <input
-                    id="product-search"
-                    type="text"
-                    placeholder="Meklēt preci, piemēram, pienu..."
-                    class="min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-600 dark:bg-zinc-800 dark:text-white"
-                >
-                <button type="button" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
-                    Meklēt
-                </button>
-            </div>
-            <flux:spacer />
-        </flux:header>
-
         <!-- Mobile User Menu -->
         <flux:header class="lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
