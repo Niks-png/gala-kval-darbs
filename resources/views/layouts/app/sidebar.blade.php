@@ -17,18 +17,46 @@
                 <flux:sidebar.item icon="book-open-text" :href="route('recipes')" :current="request()->routeIs('recipes')" wire:navigate>
                     Receptes
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="shopping-cart" :href="route('cart')" :current="request()->routeIs('cart')" wire:navigate>
+                    {{ __('Cart') }}
+                </flux:sidebar.item>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
-
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
+
+        <flux:header container class="sticky top-0 z-20 border-b border-zinc-200 bg-zinc-50/95 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95">
+            <flux:spacer />
+
+            <form method="GET" action="{{ route('products.search') }}" class="block w-full max-w-md">
+                <label for="header-search" class="sr-only">{{ __('Search products') }}</label>
+                <div class="relative">
+                    <flux:icon.magnifying-glass class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                    <input
+                        id="header-search"
+                        type="search"
+                        name="q"
+                        value="{{ request('q') }}"
+                        placeholder="{{ __('Search products') }}"
+                        class="w-full rounded-full border border-zinc-300 bg-white py-2 ps-9 pe-4 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                    >
+                </div>
+            </form>
+
+            <flux:spacer />
+
+            <flux:navbar>
+                <flux:navbar.item
+                    icon="shopping-cart"
+                    :href="route('cart')"
+                    :current="request()->routeIs('cart')"
+                    :label="__('Cart')"
+                    wire:navigate
+                />
+            </flux:navbar>
+        </flux:header>
 
         <!-- Mobile User Menu -->
         <flux:header class="lg:hidden">
