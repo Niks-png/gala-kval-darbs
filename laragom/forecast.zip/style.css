@@ -1,0 +1,185 @@
+body {
+    margin: 0px;
+    padding: 0px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.container {
+    width: 100vw;
+    height: 100vh;
+    background-color: aliceblue;
+}
+
+
+
+.navigation {
+    width: 95%;
+    height: 70px;
+    margin: 0px auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background-color: white;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+
+.nav-logo-box{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.nav-logo {
+    width: 20%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    color: black;
+}
+
+.nav-logo-link {
+    text-decoration: none;
+    color: blue;
+    font-size: 25px;
+    text-transform: uppercase;
+}
+
+.nav-logo-box svg{
+    height: 30%;
+}
+
+.nav-logo-image{
+    height: 40%;
+}
+
+.nav-info {
+    width: 30%;
+    height: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.nav-info-input{
+    padding: 10px;
+}
+
+.nav-info-image{
+    height: 33px;
+    width: auto;
+}
+
+.nav-info-button {
+    margin-left: 20px;
+    border-style: none;
+    border-radius: 7%;
+    background-color: lightgray;
+    display: flex;
+    flex-direction: row;
+    min-width: 70px;
+    height: 50%;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+}
+
+.nav-info-button svg{
+    margin-right: 10px;
+    height: 100%;
+    width: 30%;
+}
+
+.nav-link-image {
+    height: 50%;
+    margin: 15px;
+}
+
+.nav-links {
+    width: 30%;
+    height: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+
+
+.content {
+
+    width: 105%;
+    height: 200%;
+    margin: 34px auto;
+    background-color: rgb(214, 208, 208);
+    margin-top: -45px;
+
+}
+
+
+  .pelmenis{
+    margin-top: 75px;
+    width: 800px;
+    height: 60x;
+    padding: 10px;  
+    background-color: rgb(255, 240, 240);
+    margin-left: 25px;
+    border-radius: 25px;
+  }
+
+
+
+
+  .container-grid {
+    margin-top: 30px ;
+    width: 50%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 20px;
+    border-radius: 25px;
+    
+   
+}
+.vtd, .vtd5, .vtd4 , .vtd3 , .vtd2 , .vtd1 {
+    width: 85%;
+    height:45px;
+    background-color: white;
+    box-shadow: 2px 2px 2px 2px lightgray;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    padding: 18px;
+    margin-left: 100px;
+    margin-left: 21.5px;
+}
+
+
+  .knife {
+    display: inline-block;
+    float:right;
+    margin-top:-105.5px;
+    width: 40%;
+    height: 670px;
+    background-color:white;
+    box-shadow:2px 2px 2px 2px whitesmoke;
+    border-radius: 10px;
+  }
+
+
+  .knifenen {
+    display: inline-block;
+    float:right;
+    margin-top:-50;
+    width: 58.3%;
+    height: 340px;
+    background-color:white;
+    box-shadow:2px 2px 2px 2px whitesmoke;
+    border-radius: 10px;
+    margin-right: 10px;
+
+  }

@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght0,100..900;1,100..900&display=swap');
+
+
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: "Jost", serif;
+    min-height: 100vh;
+    background-color: #2b2b2e;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+
+}
+
+.navbar{
+display: flex;
+align-items: center;
+justify-content: center;
+height: 80px;
+width: 100%;
+position: sticky;
+top: 0;
+background: transparent;
+box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+backdrop-filter: blur(10px);
+z-index: 999;
+}
+
+
+.navbar-container{
+display: flex;
+align-items: center;
+justify-content: space-between;
+width: 100%;
+padding: 0 2rem;
+max-width: 1600px;
+}
+
+
+.navbar-logo{
+    font-size: 50px;
+    font-weight: 300;
+    height: 20%;
+    width: 20%;
+    color: #ffffff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+.navbar-container .navbar-menu{
+    display: flex;
+    text-align: center;
+    gap: 1.5rem;
+    list-style: none;
+}
+
+
+.navbar-container .navbar-menu li a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 500;
+    padding: 3px 20px;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    transition: all 0.7s ease;
+    white-space: nowrap;
+}
+
+
+.navbar-container .navbar-menu li a:hover{
+    color: #ffce00;
+    background: rgba(rgb(255, 206, 0), rgb(43, 43, 46,) rgb(255, 255, 255), alpha);
+    border: 2px solid #fff;
+}
+
+.navbar-toggle{
+    display: none;
+    background: transparent;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.bar{
+display: block;
+width: 25px;
+height: 3px;
+margin: 5px auto;
+background: #fff;
+transition: all 0.3s ease-in-out;
+}
+
+.main-cont{
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.box1 {
+    height: 500px;
+    width: 20%;
+}
+
+.box2 {
+    height: 500px;
+    width: 20%;
+}
+
+.box3 {
+    height: 500px;
+    width: 20%;
+}
+
+.photo{
+    width: 750px;
+}
