@@ -14,7 +14,8 @@ test('authenticated users can visit the dashboard', function () {
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
-    $response->assertOk();
+    $response->assertOk()
+        ->assertSee('Products');
 });
 
 test('authenticated users can visit the cart', function () {
@@ -60,11 +61,13 @@ test('authenticated users can search products by name', function () {
     Product::query()->create([
         'title' => 'Fresh Milk',
         'store' => 'etop.lv',
+        'category' => 'Piena produkti',
         'current_price' => 1.99,
     ]);
     Product::query()->create([
         'title' => 'Bread',
         'store' => 'maxima.lv',
+        'category' => 'Maize un konditoreja',
         'current_price' => 0.99,
     ]);
 
@@ -73,6 +76,31 @@ test('authenticated users can search products by name', function () {
     $response->assertOk()
         ->assertSee('Fresh Milk')
         ->assertDontSee('Bread');
+});
+
+test('authenticated users can filter products by store and food type', function () {
+    $user = User::factory()->create();
+    Product::query()->create([
+        'title' => 'Fresh Milk',
+        'store' => 'etop.lv',
+        'category' => 'Piena produkti',
+        'current_price' => 1.99,
+    ]);
+    Product::query()->create([
+        'title' => 'Carrots',
+        'store' => 'maxima.lv',
+        'category' => 'Dārzeņi',
+        'current_price' => 0.99,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('products.search', [
+        'store' => 'etop.lv',
+        'category' => 'Piena produkti',
+    ]));
+
+    $response->assertOk()
+        ->assertSee('Fresh Milk')
+        ->assertDontSee('Carrots');
 });
 
 test('authenticated users can add a product to the cart', function () {

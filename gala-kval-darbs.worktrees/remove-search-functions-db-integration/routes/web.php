@@ -7,7 +7,15 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', function () {
+        $products = Product::query()
+            ->with('latestPriceHistory')
+            ->orderBy('title')
+            ->limit(60)
+            ->get();
+
+        return view('dashboard', compact('products'));
+    })->name('dashboard');
     Route::view('recipes', 'pages.recipes')->name('recipes');
     Route::view('map', 'pages.map')->name('map');
     Route::get('cart', function (Request $request) {
@@ -61,16 +69,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('cart.items.destroy');
     Route::get('products/search', function (Request $request) {
         $query = trim((string) $request->string('q'));
-        $products = $query === ''
+        $store = trim((string) $request->string('store'));
+        $category = trim((string) $request->string('category'));
+        $productQuery = Product::query()
+            ->when($query !== '', fn ($products) => $products->where('title', 'like', "%{$query}%"))
+            ->when($store !== '', fn ($products) => $products->where('store', $store))
+            ->when($category !== '', fn ($products) => $products->where('category', $category))
+            ->with('latestPriceHistory')
+            ->orderBy('title');
+        $products = $query === '' && $store === '' && $category === ''
             ? collect()
-            : Product::query()
-                ->where('title', 'like', "%{$query}%")
-                ->with('latestPriceHistory')
-                ->orderBy('title')
-                ->get();
+            : $productQuery->get();
 
         return view('pages.product-search', [
             'query' => $query,
+            'store' => $store,
+            'category' => $category,
+            'stores' => Product::query()->whereNotNull('store')->distinct()->orderBy('store')->pluck('store'),
+            'categories' => Product::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
             'products' => $products,
         ]);
     })->name('products.search');

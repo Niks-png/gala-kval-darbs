@@ -9,7 +9,7 @@
             @endif
         </div>
 
-        @if ($query === '')
+        @if ($query === '' && $store === '' && $category === '')
             <flux:text>{{ __('Enter a product name to search.') }}</flux:text>
         @elseif ($products->isEmpty())
             <flux:text>{{ __('No products found.') }}</flux:text>

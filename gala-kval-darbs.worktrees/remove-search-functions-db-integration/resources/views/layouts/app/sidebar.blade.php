@@ -36,7 +36,7 @@
         <flux:header container class="sticky top-0 z-20 border-b border-zinc-200 bg-zinc-50/95 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95">
             <flux:spacer />
 
-            <form method="GET" action="{{ route('products.search') }}" class="block w-full max-w-md">
+            <form method="GET" action="{{ route('products.search') }}" class="flex w-full max-w-3xl items-center gap-2">
                 <label for="header-search" class="sr-only">{{ __('Search products') }}</label>
                 <div class="relative">
                     <flux:icon.magnifying-glass class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
@@ -49,6 +49,21 @@
                         class="w-full rounded-full border border-zinc-300 bg-white py-2 ps-9 pe-4 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
                     >
                 </div>
+                <label for="header-store" class="sr-only">{{ __('Store') }}</label>
+                    <select id="header-store" name="store" class="rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                        <option value="">{{ __('All stores') }}</option>
+                        @foreach ($stores ?? [] as $availableStore)
+                            <option value="{{ $availableStore }}" @selected(($store ?? request('store')) === $availableStore)>{{ $availableStore }}</option>
+                        @endforeach
+                    </select>
+                    <label for="header-category" class="sr-only">{{ __('Food type') }}</label>
+                    <select id="header-category" name="category" class="rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                        <option value="">{{ __('All food types') }}</option>
+                        @foreach ($categories ?? [] as $availableCategory)
+                            <option value="{{ $availableCategory }}" @selected(($category ?? request('category')) === $availableCategory)>{{ $availableCategory }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700">{{ __('Filter') }}</button>
             </form>
 
             <flux:spacer />

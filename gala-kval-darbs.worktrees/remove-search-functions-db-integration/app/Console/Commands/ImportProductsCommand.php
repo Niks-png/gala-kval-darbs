@@ -82,6 +82,7 @@ class ImportProductsCommand extends Command
             $products[] = [
                 'title' => $title,
                 'store' => $store,
+                'category' => $this->categoryFor($title),
                 'original_price' => $this->nullableValue($originalPrice),
                 'current_price' => $this->nullablePrice($currentPrice),
                 'price' => $this->nullablePrice($currentPrice) ?? '0.00',
@@ -117,7 +118,7 @@ class ImportProductsCommand extends Command
             Product::upsert(
                 $products,
                 ['title', 'store'],
-                ['original_price', 'current_price', 'price', 'unit_price', 'unit', 'updated_at'],
+                ['category', 'original_price', 'current_price', 'price', 'unit_price', 'unit', 'updated_at'],
             );
 
             if ($priceChanges !== []) {
@@ -146,5 +147,22 @@ class ImportProductsCommand extends Command
         }
 
         return str_replace(',', '.', (string) preg_replace('/[^0-9,.-]/', '', $value));
+    }
+
+    private function categoryFor(string $title): string
+    {
+        $title = mb_strtolower($title);
+
+        return match (true) {
+            (bool) preg_match('/piens|siers|jogurt|jogurts|kefīr|kefir|sviest|krēj|krējums|biezpien|pudiņ/', $title) => 'Piena produkti',
+            (bool) preg_match('/dārzen|tomāt|gurķ|kartupe|burkān|sīpol|ķiplok|kāpost|salāt|paprik|broko|puķkāpost/', $title) => 'Dārzeņi',
+            (bool) preg_match('/augļ|ābol|banān|apelsīn|mandarīn|citrus|vīnog|bumbier|zemen|mellen|avokado/', $title) => 'Augļi',
+            (bool) preg_match('/maiz|bulciņ|baget|tost|rupjmaiz|smalkmaiz/', $title) => 'Maize un konditoreja',
+            (bool) preg_match('/gaļ|vista|cūk|liellop|des|šķiņķ|bekon|filej|kotlet/', $title) => 'Gaļa',
+            (bool) preg_match('/ziv|lasis|tunc|siļķ|garnel|jūras vel/', $title) => 'Zivis un jūras veltes',
+            (bool) preg_match('/sald|šokolād|konfekt|cepum|čips|uzkod|desert/', $title) => 'Saldumi un uzkodas',
+            (bool) preg_match('/dzēr|sula|ūdens|kafij|tēj|alus|vīns|limonād/', $title) => 'Dzērieni',
+            default => 'Citi',
+        };
     }
 }
