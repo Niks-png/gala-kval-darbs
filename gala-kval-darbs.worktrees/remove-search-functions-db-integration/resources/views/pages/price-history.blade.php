@@ -16,6 +16,7 @@
                             <th class="px-4 py-3 text-start font-medium">{{ __('Store') }}</th>
                             <th class="px-4 py-3 text-start font-medium">{{ __('Previous price') }}</th>
                             <th class="px-4 py-3 text-start font-medium">{{ __('New price') }}</th>
+                            <th class="px-4 py-3 text-start font-medium">{{ __('Change') }}</th>
                             <th class="px-4 py-3 text-start font-medium">{{ __('Changed') }}</th>
                         </tr>
                     </thead>
@@ -27,6 +28,9 @@
                                 <td class="px-4 py-3">{{ number_format((float) $change->previous_price, 2) }} €</td>
                                 <td class="px-4 py-3 font-medium {{ (float) $change->new_price < (float) $change->previous_price ? 'text-emerald-600' : 'text-red-600' }}">
                                     {{ number_format((float) $change->new_price, 2) }} €
+                                </td>
+                                <td class="px-4 py-3 {{ (float) $change->new_price < (float) $change->previous_price ? 'text-emerald-600' : 'text-red-600' }}">
+                                    {{ number_format((float) $change->new_price - (float) $change->previous_price, 2) }} €
                                 </td>
                                 <td class="px-4 py-3">{{ $change->created_at->format('d.m.Y H:i') }}</td>
                             </tr>

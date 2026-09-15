@@ -49,3 +49,22 @@ test('legacy scraped products use the supplied store', function () {
 
     unlink($csvPath);
 });
+
+test('the same product can be imported for different stores', function () {
+    foreach (['etop.lv', 'maxima.lv'] as $store) {
+        $csvPath = tempnam(sys_get_temp_dir(), 'products-');
+        file_put_contents($csvPath, implode("\n", [
+            'title,store,original_price,current_price,unit_price,unit',
+            "Milk,{$store},1.50,0.99,0.99,€/l",
+        ]));
+
+        $this->artisan('products:import', ['file' => $csvPath])
+            ->assertSuccessful();
+
+        unlink($csvPath);
+    }
+
+    expect(Product::query()->where('title', 'Milk')->count())->toBe(2)
+        ->and(Product::query()->where('title', 'Milk')->pluck('store')->sort()->values()->all())
+        ->toBe(['etop.lv', 'maxima.lv']);
+});

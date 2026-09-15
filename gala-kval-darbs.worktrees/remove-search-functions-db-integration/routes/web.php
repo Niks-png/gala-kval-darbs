@@ -27,13 +27,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'products' => $products,
         ]);
     })->name('cart');
-    Route::get('price-history', function () {
+    Route::get('price-history', function (Request $request) {
+        $query = trim((string) $request->string('q'));
+        $store = trim((string) $request->string('store'));
         $history = \App\Models\ProductPriceHistory::query()
             ->with('product')
+            ->when($query !== '', fn ($history) => $history->whereHas('product', fn ($product) => $product->where('title', 'like', "%{$query}%")))
+            ->when($store !== '', fn ($history) => $history->whereHas('product', fn ($product) => $product->where('store', $store)))
             ->latest()
             ->get();
 
-        return view('pages.price-history', compact('history'));
+        return view('pages.price-history', [
+            'history' => $history,
+            'query' => $query,
+            'store' => $store,
+            'stores' => Product::query()->whereNotNull('store')->distinct()->orderBy('store')->pluck('store'),
+        ]);
     })->name('price-history');
     Route::post('cart/items/{product}', function (Request $request, Product $product) {
         $cart = $request->session()->get('cart', []);

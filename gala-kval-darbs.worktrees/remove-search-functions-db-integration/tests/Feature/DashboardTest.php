@@ -48,12 +48,45 @@ test('authenticated users can view price history', function () {
         ->assertSee('1.49');
 });
 
+test('price history can be filtered by product and store', function () {
+    $user = User::factory()->create();
+    $product = Product::query()->create([
+        'title' => 'Fresh Milk',
+        'store' => 'etop.lv',
+        'current_price' => 1.49,
+    ]);
+    ProductPriceHistory::query()->create([
+        'product_id' => $product->id,
+        'previous_price' => 1.99,
+        'new_price' => 1.49,
+    ]);
+    Product::query()->create([
+        'title' => 'Bread',
+        'store' => 'maxima.lv',
+        'current_price' => 0.99,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('price-history', [
+        'q' => 'Milk',
+        'store' => 'etop.lv',
+    ]));
+
+    $response->assertOk()
+        ->assertSee('Fresh Milk')
+        ->assertDontSee('Bread')
+        ->assertSee('-0.50');
+});
+
 test('authenticated users can visit the map', function () {
     $user = User::factory()->create();
     $response = $this->actingAs($user)->get(route('map'));
 
     $response->assertOk()
-        ->assertSee('Karte');
+        ->assertSee('Karte')
+        ->assertSee('store-map')
+        ->assertSee('Maxima')
+        ->assertSee('Top')
+        ->assertSee('data/store-locations.json');
 });
 
 test('authenticated users can search products by name', function () {

@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('title')->unique();
             $table->string('original_price')->nullable();
             $table->decimal('current_price', 10, 2)->nullable();
+            $table->decimal('price', 10, 2)->default(0);
             $table->timestamps();
         });
     }
