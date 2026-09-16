@@ -34,6 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->with('product')
             ->when($query !== '', fn ($history) => $history->whereHas('product', fn ($product) => $product->where('title', 'like', "%{$query}%")))
             ->when($store !== '', fn ($history) => $history->whereHas('product', fn ($product) => $product->where('store', $store)))
+            ->orderByRaw('CASE WHEN previous_price <> new_price THEN 0 ELSE 1 END')
             ->latest()
             ->get();
 

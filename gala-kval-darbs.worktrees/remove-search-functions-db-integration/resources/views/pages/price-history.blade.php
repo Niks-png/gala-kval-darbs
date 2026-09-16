@@ -2,7 +2,7 @@
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div>
             <flux:heading size="xl">{{ __('Price history') }}</flux:heading>
-            <flux:text class="mt-2">{{ __('See how product prices have changed over time.') }}</flux:text>
+            <flux:text class="mt-2">{{ __('Real price changes are shown first. Initial product snapshots are also included.') }}</flux:text>
         </div>
 
         @if ($history->isEmpty())

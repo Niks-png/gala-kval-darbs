@@ -73,6 +73,7 @@ Dušas Želeja  Palmolive Thermal Spa Shower Sorbet 500ml,etop.lv,"4,39 € - 4,
 Dušas Želeja Palmolive Aroma Essence Sleep 500ml,etop.lv,"4,39 € - 4,79 €",3.69
 Jogurta Kokteilis Kārums Ar Vaniļas Piedevu 230g,etop.lv,‌,0.69
 Ķermeņa Krēms Sence Aloe Vera 200ml,etop.lv,‌,1.99
+Saldējums Tip Top Sāļā Karameļu Garša Vafeļu Glāzē 65g,etop.lv,‌,0.49
 Siļķu Filejas Gab. Loms Marinēti Skandināvu Gaumē Ar Sīpolie,etop.lv,‌,2.79
 Siļķu Filejas Gab.loms Marinādē Ar Sīpoliem 370g,etop.lv,‌,2.79
 Siļķu Fileja Gabaliņ Loms Ar Burkāniem Un Sīpoliem 200g,etop.lv,‌,1.79
@@ -101,6 +102,7 @@ Tualetes Bloks Bref Color Auto Active Flowers 50g,etop.lv,"2,75 € - 3,05 €",
 Servelāde Vigesta Premium Karsti Kūp. 400g,etop.lv,"3,89 € - 4,29 €",3.19
 Porciju Maize Fazer Apalīši Siera Maizītes 200g,etop.lv,‌,0.89
 Deserts Kārums Panna Cotta Zemeņu 140g,etop.lv,"1,19 € - 1,39 €",0.69
+Deserts Kārums Panna Cotta Ķiršu 140g,etop.lv,"1,19 € - 1,39 €",0.69
 Deserts Kārums Panna Cotta Mango-marakuja 140g,etop.lv,"1,19 € - 1,39 €",0.69
 Makaroni Italpasta Nr.46 Gliemežvaki 500g,etop.lv,"1,69 € - 1,89 €",1.29
 Tomātu Pasta Tip Top 250g,etop.lv,‌,1.48
@@ -280,7 +282,6 @@ Sautējums William Saurin Vistas Ar Sēņu Mērci 400g,etop.lv,‌,3.89
 Vista Krējuma Mērcē William Saurin Ar Makaron. Un Sēnēm 280g,etop.lv,‌,3.89
 Sautējums William Saurin Teļa Gaļas Un Dārzeņu 280g,etop.lv,‌,3.89
 Sautējums William Saurin Truša Baltvīna Mērcē 300g,etop.lv,‌,3.89
-Veļas Mazg.līdz.ariel Color 1.125l 25mr,etop.lv,"8,99 € - 9,89 €",7.99
 Nūdeles Sam Yang Ramen Hot Chicken Carbo 130g,etop.lv,‌,1.89
 Kafijas Pupiņas Aroma Gold Espresso 1kg,etop.lv,"16,99 € - 17,89 €",15.99
 Graudainais Biezpiens Tip Top 9% 185g,etop.lv,‌,1.25
@@ -397,7 +398,6 @@ Kafija Šķīstošā Tip Top Classic 200g,etop.lv,‌,6.29
 Krēmsiers Snofrisk 125g,etop.lv,‌,2.19
 Putra Rīsu Annele Ar Mellenēm 200g,etop.lv,‌,0.99
 Desa Biovela Iecienītā Ar Speķi 500g,etop.lv,"1,89 € - 2,09 €",1.49
-Trauku Mazg.mašīnai Kapsulas Fairy All In1 Lemon 29gab,etop.lv,"8,99 € - 9,89 €",7.99
 Kafijas Dzēriens Lofbergs Ice Latte Macchiato Org.230ml,etop.lv,‌,1.39
 Kūka Staburadze Tiramisu 280g,etop.lv,"4,19 € - 4,59 €",3.49
 Ūdens Tip Top Dzeramais Negāz.5l Pet,etop.lv,‌,0.99
@@ -838,7 +838,7 @@ Dzērvenes Alis Co Žāvētas 200g,etop.lv,"2,65 € - 2,95 €",2.05
 Rozīnes Alis Co Jumbo 200g,etop.lv,"1,79 € - 1,99 €",1.39
 Skūšanās Putas Gillette Sensitive 300ml,etop.lv,"4,95 € - 4,99 €",3.19
 Čipsi Pringles Original 165g,etop.lv,‌,2.19
-Čipsi Pringles Ar Sieru Un Sīpoliem 165g,etop.lv,‌,2.19
+Čipsi Pringles Ar Krējumu Un Sīpoliem 165g,etop.lv,‌,2.19
 Čipsi Pringles Ar Sieru Un Sīpoliem 165g,etop.lv,‌,2.19
 Siers Sn Alpu Šķēlēs 150g,etop.lv,"2,59 € - 2,89 €",1.99
 Baterijas Duracell Cb Aa 4gab.,etop.lv,‌,2.99
