@@ -9,8 +9,58 @@
             @endif
         </div>
 
-        @if ($query === '')
-            <flux:text>{{ __('Enter a product name to search.') }}</flux:text>
+        <form method="GET" action="{{ route('products.search') }}" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div class="flex-1">
+                <label for="filter-query" class="mb-1 block text-sm text-zinc-500">{{ __('Search products') }}</label>
+                <input
+                    id="filter-query"
+                    type="search"
+                    name="q"
+                    value="{{ $query }}"
+                    placeholder="{{ __('Search products') }}"
+                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                >
+            </div>
+            <div class="sm:w-48">
+                <label for="filter-store" class="mb-1 block text-sm text-zinc-500">{{ __('Store') }}</label>
+                <select
+                    id="filter-store"
+                    name="store"
+                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                >
+                    <option value="">{{ __('All stores') }}</option>
+                    @foreach ($stores as $storeOption)
+                        <option value="{{ $storeOption }}" @selected($store === $storeOption)>{{ $storeOption }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="sm:w-48">
+                <label for="filter-category" class="mb-1 block text-sm text-zinc-500">{{ __('Category') }}</label>
+                <select
+                    id="filter-category"
+                    name="category"
+                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                >
+                    <option value="">{{ __('All categories') }}</option>
+                    @foreach ($categories as $categoryOption)
+                        <option value="{{ $categoryOption }}" @selected($category === $categoryOption)>{{ $categoryOption }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
+                    {{ __('Filter') }}
+                </button>
+                @if ($query !== '' || $store !== '' || $category !== '')
+                    <a href="{{ route('products.search') }}" class="rounded-lg border border-zinc-300 px-5 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                        {{ __('Reset') }}
+                    </a>
+                @endif
+            </div>
+        </form>
+
+        @if ($query === '' && $store === '' && $category === '')
+            <flux:text>{{ __('Enter a product name or choose a filter to search.') }}</flux:text>
         @elseif ($products->isEmpty())
             <flux:text>{{ __('No products found.') }}</flux:text>
         @else

@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\User;
 use App\Models\Product;
 use App\Models\ProductPriceHistory;
+use App\Models\User;
 
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
@@ -47,6 +47,44 @@ test('authenticated users can view price history', function () {
         ->assertSee('1.49');
 });
 
+test('price history does not flag an unchanged snapshot as a price change', function () {
+    $user = User::factory()->create();
+    $product = Product::query()->create([
+        'title' => 'Fresh Milk',
+        'store' => 'etop.lv',
+        'current_price' => 1.49,
+    ]);
+    ProductPriceHistory::query()->create([
+        'product_id' => $product->id,
+        'previous_price' => 1.49,
+        'new_price' => 1.49,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('price-history'))
+        ->assertOk()
+        ->assertSee('No change yet');
+});
+
+test('price history filters by search query and store', function () {
+    $user = User::factory()->create();
+    $milk = Product::query()->create(['title' => 'Fresh Milk', 'store' => 'maxima.lv', 'current_price' => 1.49]);
+    $bread = Product::query()->create(['title' => 'Bread', 'store' => 'etop.lv', 'current_price' => 0.99]);
+    ProductPriceHistory::query()->create(['product_id' => $milk->id, 'previous_price' => 1.99, 'new_price' => 1.49]);
+    ProductPriceHistory::query()->create(['product_id' => $bread->id, 'previous_price' => 1.09, 'new_price' => 0.99]);
+
+    $this->actingAs($user)
+        ->get(route('price-history', ['q' => 'milk']))
+        ->assertOk()
+        ->assertSee('Fresh Milk')
+        ->assertDontSee('Bread');
+
+    $this->get(route('price-history', ['store' => 'etop.lv']))
+        ->assertOk()
+        ->assertSee('Bread')
+        ->assertDontSee('Fresh Milk');
+});
+
 test('authenticated users can visit the map', function () {
     $user = User::factory()->create();
     $response = $this->actingAs($user)->get(route('map'));
@@ -75,7 +113,7 @@ test('authenticated users can search products by name', function () {
         ->assertDontSee('Bread');
 });
 
-test('authenticated users can add a product to the cart', function () {
+test('authenticated users can add a product to their active shopping list', function () {
     $user = User::factory()->create();
     $product = Product::query()->create([
         'title' => 'Fresh Milk',
@@ -92,31 +130,64 @@ test('authenticated users can add a product to the cart', function () {
         ->assertOk()
         ->assertJson(['message' => 'Produkts veiksmīgi pievienots iepirkuma sarakstam']);
 
-    $this->get(route('cart'))
+    $list = $user->shoppingLists()->firstOrFail();
+
+    $this->get(route('cart.show', $list))
         ->assertOk()
-        ->assertSee('Fresh Milk')
-        ->assertSee('Quantity: 2');
+        ->assertSee('Fresh Milk');
+
+    expect($list->products()->first()->pivot->quantity)->toBe(2);
 });
 
-test('authenticated users can change and remove cart quantities', function () {
+test('authenticated users can create multiple named shopping lists', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('cart.store'), ['name' => 'Nedēļas iepirkumi'])
+        ->assertRedirect();
+
+    $this->post(route('cart.store'), ['name' => 'Ballītes saraksts'])
+        ->assertRedirect();
+
+    expect($user->shoppingLists()->pluck('name')->all())
+        ->toBe(['Nedēļas iepirkumi', 'Ballītes saraksts']);
+
+    $this->get(route('cart'))
+        ->assertOk()
+        ->assertSee('Nedēļas iepirkumi')
+        ->assertSee('Ballītes saraksts');
+});
+
+test('authenticated users can change and remove shopping list item quantities', function () {
     $user = User::factory()->create();
     $product = Product::query()->create([
         'title' => 'Fresh Milk',
         'store' => 'etop.lv',
         'current_price' => 1.99,
     ]);
+    $list = $user->shoppingLists()->create(['name' => 'Mans saraksts']);
+    $list->products()->attach($product->id, ['quantity' => 2]);
 
-    $response = $this->actingAs($user)
-        ->withSession(['cart' => [$product->id => 2]])
-        ->post(route('cart.items.decrease', $product));
+    $this->actingAs($user)
+        ->post(route('cart.lists.items.decrease', [$list, $product]))
+        ->assertRedirect(route('cart.show', $list));
 
-    $response->assertRedirect(route('cart'));
-    expect(session('cart'))->toBe([$product->id => 1]);
+    expect($list->products()->first()->pivot->quantity)->toBe(1);
 
-    $response = $this->delete(route('cart.items.destroy', $product));
+    $this->delete(route('cart.lists.items.destroy', [$list, $product]))
+        ->assertRedirect(route('cart.show', $list));
 
-    $response->assertRedirect(route('cart'));
-    expect(session('cart'))->toBe([]);
+    expect($list->products()->count())->toBe(0);
+});
+
+test('users cannot view or modify another users shopping list', function () {
+    $owner = User::factory()->create();
+    $intruder = User::factory()->create();
+    $list = $owner->shoppingLists()->create(['name' => 'Mans saraksts']);
+
+    $this->actingAs($intruder)
+        ->get(route('cart.show', $list))
+        ->assertForbidden();
 });
 
 test('product imports record changed previous prices', function () {
