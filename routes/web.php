@@ -1,82 +1,72 @@
 <?php
 
+use App\Http\Controllers\ShoppingListController;
 use App\Models\Product;
+use App\Models\ProductPriceHistory;
+use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
+    Route::get('dashboard', function (Request $request) {
+        $query = trim((string) $request->string('q'));
+
         $products = Product::query()
+            ->when($query !== '', fn ($products) => $products->where('title', 'like', "%{$query}%"))
             ->with('latestPriceHistory')
             ->orderBy('title')
             ->limit(60)
             ->get();
 
-        return view('dashboard', compact('products'));
+        return view('dashboard', [
+            'products' => $products,
+            'query' => $query,
+            'productCount' => Product::query()->count(),
+            'storeCount' => Product::query()->whereNotNull('store')->distinct('store')->count('store'),
+            'recentPriceDrops' => ProductPriceHistory::query()
+                ->whereColumn('new_price', '<', 'previous_price')
+                ->where('created_at', '>=', now()->subWeek())
+                ->count(),
+        ]);
     })->name('dashboard');
     Route::view('recipes', 'pages.recipes')->name('recipes');
-    Route::view('map', 'pages.map')->name('map');
-    Route::get('cart', function (Request $request) {
-        $cart = $request->session()->get('cart', []);
-        $products = Product::query()->whereIn('id', array_keys($cart))->get();
-
-        return view('pages.cart', [
-            'cart' => $cart,
-            'products' => $products,
+    Route::get('map', function () {
+        return view('pages.map', [
+            'stores' => Store::query()->orderBy('name')->get(),
         ]);
-    })->name('cart');
+    })->name('map');
+    Route::get('cart', [ShoppingListController::class, 'index'])->name('cart');
+    Route::post('cart', [ShoppingListController::class, 'store'])->name('cart.store');
+    Route::get('cart/{shoppingList}', [ShoppingListController::class, 'show'])->name('cart.show');
+    Route::patch('cart/{shoppingList}', [ShoppingListController::class, 'update'])->name('cart.update');
+    Route::delete('cart/{shoppingList}', [ShoppingListController::class, 'destroy'])->name('cart.destroy');
+    Route::post('cart/{shoppingList}/activate', [ShoppingListController::class, 'activate'])->name('cart.activate');
     Route::get('price-history', function (Request $request) {
         $query = trim((string) $request->string('q'));
         $store = trim((string) $request->string('store'));
-        $history = \App\Models\ProductPriceHistory::query()
-            ->with('product')
-            ->when($query !== '', fn ($history) => $history->whereHas('product', fn ($product) => $product->where('title', 'like', "%{$query}%")))
-            ->when($store !== '', fn ($history) => $history->whereHas('product', fn ($product) => $product->where('store', $store)))
-            ->orderByRaw('CASE WHEN previous_price <> new_price THEN 0 ELSE 1 END')
-            ->latest()
-            ->get();
+
+        $products = Product::query()
+            ->whereHas('priceHistory')
+            ->with(['priceHistory' => fn ($history) => $history->orderBy('created_at')])
+            ->when($query !== '', fn ($products) => $products->where('title', 'like', "%{$query}%"))
+            ->when($store !== '', fn ($products) => $products->where('store', $store))
+            ->get()
+            ->sortByDesc(fn (Product $product) => $product->priceHistory->max('created_at'))
+            ->values();
 
         return view('pages.price-history', [
-            'history' => $history,
+            'products' => $products,
             'query' => $query,
             'store' => $store,
             'stores' => Product::query()->whereNotNull('store')->distinct()->orderBy('store')->pluck('store'),
         ]);
     })->name('price-history');
-    Route::post('cart/items/{product}', function (Request $request, Product $product) {
-        $cart = $request->session()->get('cart', []);
-        $cart[$product->id] = ($cart[$product->id] ?? 0) + 1;
-        $request->session()->put('cart', $cart);
-
-        if ($request->expectsJson()) {
-            return response()->json(['message' => 'Produkts veiksmīgi pievienots iepirkuma sarakstam']);
-        }
-
-        return back()->with('success', 'Produkts veiksmīgi pievienots iepirkuma sarakstam');
-    })->name('cart.items.store');
-    Route::post('cart/items/{product}/decrease', function (Request $request, Product $product) {
-        $cart = $request->session()->get('cart', []);
-        $quantity = ($cart[$product->id] ?? 0) - 1;
-
-        if ($quantity > 0) {
-            $cart[$product->id] = $quantity;
-        } else {
-            unset($cart[$product->id]);
-        }
-
-        $request->session()->put('cart', $cart);
-
-        return to_route('cart');
-    })->name('cart.items.decrease');
-    Route::delete('cart/items/{product}', function (Request $request, Product $product) {
-        $cart = $request->session()->get('cart', []);
-        unset($cart[$product->id]);
-        $request->session()->put('cart', $cart);
-
-        return to_route('cart');
-    })->name('cart.items.destroy');
+    Route::post('cart/items/{product}', [ShoppingListController::class, 'quickAdd'])->name('cart.items.store');
+    Route::post('cart/{shoppingList}/items/{product}', [ShoppingListController::class, 'increase'])->name('cart.lists.items.store');
+    Route::post('cart/{shoppingList}/items/{product}/decrease', [ShoppingListController::class, 'decrease'])->name('cart.lists.items.decrease');
+    Route::delete('cart/{shoppingList}/items/{product}', [ShoppingListController::class, 'destroyItem'])->name('cart.lists.items.destroy');
     Route::get('products/search', function (Request $request) {
         $query = trim((string) $request->string('q'));
         $store = trim((string) $request->string('store'));

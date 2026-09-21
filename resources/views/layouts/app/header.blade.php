@@ -27,7 +27,7 @@
 
             <flux:spacer />
 
-            <form method="GET" action="{{ route('products.search') }}" class="mx-3 block min-w-0 flex-1 max-w-sm">
+            <form method="GET" action="{{ request()->routeIs('dashboard') ? route('dashboard') : route('products.search') }}" class="mx-3 block min-w-0 flex-1 max-w-sm">
                 <label for="header-search" class="sr-only">{{ __('Search products') }}</label>
                 <div class="relative">
                     <flux:icon.magnifying-glass class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />

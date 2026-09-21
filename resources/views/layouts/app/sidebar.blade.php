@@ -4,7 +4,7 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="desktop" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate class="in-data-flux-sidebar-collapsed-desktop:hidden" />
                 <flux:sidebar.collapse class="in-data-flux-sidebar-collapsed-desktop:opacity-100 in-data-flux-sidebar-collapsed-desktop:static" />
@@ -33,10 +33,10 @@
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
-        <flux:header container class="sticky top-0 z-20 border-b border-zinc-200 bg-zinc-50/95 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95">
+        <flux:header container class="hidden lg:block sticky top-0 z-20 border-b border-zinc-200 bg-zinc-50/95 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95">
             <flux:spacer />
 
-            <form method="GET" action="{{ route('products.search') }}" class="block w-full max-w-md">
+            <form method="GET" action="{{ request()->routeIs('dashboard') ? route('dashboard') : route('products.search') }}" class="block w-full max-w-md">
                 <label for="header-search" class="sr-only">{{ __('Search products') }}</label>
                 <div class="relative">
                     <flux:icon.magnifying-glass class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
