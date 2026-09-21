@@ -7,7 +7,15 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', function () {
+        $products = Product::query()
+            ->with('latestPriceHistory')
+            ->orderBy('title')
+            ->limit(60)
+            ->get();
+
+        return view('dashboard', compact('products'));
+    })->name('dashboard');
     Route::view('recipes', 'pages.recipes')->name('recipes');
     Route::view('map', 'pages.map')->name('map');
     Route::get('cart', function (Request $request) {
@@ -19,13 +27,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'products' => $products,
         ]);
     })->name('cart');
-    Route::get('price-history', function () {
+    Route::get('price-history', function (Request $request) {
+        $query = trim((string) $request->string('q'));
+        $store = trim((string) $request->string('store'));
         $history = \App\Models\ProductPriceHistory::query()
             ->with('product')
+            ->when($query !== '', fn ($history) => $history->whereHas('product', fn ($product) => $product->where('title', 'like', "%{$query}%")))
+            ->when($store !== '', fn ($history) => $history->whereHas('product', fn ($product) => $product->where('store', $store)))
+            ->orderByRaw('CASE WHEN previous_price <> new_price THEN 0 ELSE 1 END')
             ->latest()
             ->get();
 
-        return view('pages.price-history', compact('history'));
+        return view('pages.price-history', [
+            'history' => $history,
+            'query' => $query,
+            'store' => $store,
+            'stores' => Product::query()->whereNotNull('store')->distinct()->orderBy('store')->pluck('store'),
+        ]);
     })->name('price-history');
     Route::post('cart/items/{product}', function (Request $request, Product $product) {
         $cart = $request->session()->get('cart', []);
@@ -61,16 +79,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('cart.items.destroy');
     Route::get('products/search', function (Request $request) {
         $query = trim((string) $request->string('q'));
-        $products = $query === ''
+        $store = trim((string) $request->string('store'));
+        $category = trim((string) $request->string('category'));
+        $productQuery = Product::query()
+            ->when($query !== '', fn ($products) => $products->where('title', 'like', "%{$query}%"))
+            ->when($store !== '', fn ($products) => $products->where('store', $store))
+            ->when($category !== '', fn ($products) => $products->where('category', $category))
+            ->with('latestPriceHistory')
+            ->orderBy('title');
+        $products = $query === '' && $store === '' && $category === ''
             ? collect()
-            : Product::query()
-                ->where('title', 'like', "%{$query}%")
-                ->with('latestPriceHistory')
-                ->orderBy('title')
-                ->get();
+            : $productQuery->get();
 
         return view('pages.product-search', [
             'query' => $query,
+            'store' => $store,
+            'category' => $category,
+            'stores' => Product::query()->whereNotNull('store')->distinct()->orderBy('store')->pluck('store'),
+            'categories' => Product::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
             'products' => $products,
         ]);
     })->name('products.search');
