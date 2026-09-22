@@ -1,15 +1,15 @@
 <x-layouts::app :title="__('Dashboard')">
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div class="grid gap-4 md:grid-cols-3">
-            <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
                 <flux:text>{{ __('Produkti') }}</flux:text>
                 <flux:heading size="xl">{{ $productCount }}</flux:heading>
             </div>
-            <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
                 <flux:text>{{ __('Veikali') }}</flux:text>
                 <flux:heading size="xl">{{ $storeCount }}</flux:heading>
             </div>
-            <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
                 <flux:text>{{ __('Cenu kritumi (7 dienas)') }}</flux:text>
                 <flux:heading size="xl" class="text-emerald-600 dark:text-emerald-400">{{ $recentPriceDrops }}</flux:heading>
             </div>
@@ -29,7 +29,15 @@
                     @foreach ($products as $product)
                         <form method="POST" action="{{ route('cart.items.store', $product) }}" class="add-to-cart-form">
                             @csrf
-                            <button type="submit" class="block w-full rounded-xl border border-neutral-200 p-4 text-start transition hover:border-emerald-500 hover:shadow-md dark:border-neutral-700">
+                            <button type="submit" class="block w-full overflow-hidden rounded-xl border border-neutral-200 text-start shadow-sm transition hover:border-emerald-500 hover:shadow-md dark:border-neutral-700">
+                                <div class="flex h-32 items-center justify-center bg-neutral-50 dark:bg-neutral-800">
+                                    @if ($product->image_url)
+                                        <img src="{{ $product->image_url }}" alt="" class="h-full w-full object-contain p-2" loading="lazy">
+                                    @else
+                                        <flux:icon.photo class="size-8 text-neutral-300 dark:text-neutral-600" />
+                                    @endif
+                                </div>
+                                <div class="p-4">
                                 <flux:heading size="sm">{{ $product->title }}</flux:heading>
                                 <flux:text class="mt-1">{{ $product->store }}</flux:text>
                                 <div class="mt-4 flex items-baseline justify-between gap-3">
@@ -46,6 +54,7 @@
                                     @endif
                                 </div>
                                 <flux:text class="mt-3 text-emerald-600 dark:text-emerald-400">{{ __('Add to cart') }}</flux:text>
+                                </div>
                             </button>
                         </form>
                     @endforeach

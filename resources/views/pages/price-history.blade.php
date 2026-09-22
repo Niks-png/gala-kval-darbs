@@ -43,7 +43,7 @@
                             ? ($changeAmount / (float) $latest->previous_price) * 100
                             : 0.0;
                     @endphp
-                    <details class="group rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+                    <details class="group rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
                         <summary class="flex cursor-pointer list-none flex-wrap items-center gap-4">
                             <div class="min-w-48 flex-1">
                                 <flux:heading size="sm">{{ $product->title }}</flux:heading>

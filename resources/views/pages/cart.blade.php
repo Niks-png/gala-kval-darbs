@@ -31,7 +31,7 @@
                         $total = $list->products->sum(fn ($product) => (float) ($product->current_price ?? 0) * $product->pivot->quantity);
                         $isActive = $list->id === $activeListId;
                     @endphp
-                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 dark:border-neutral-700 {{ $isActive ? 'border-emerald-500' : 'border-neutral-200' }}">
+                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 shadow-sm transition hover:shadow-md dark:border-neutral-700 {{ $isActive ? 'border-emerald-500' : 'border-neutral-200' }}">
                         <a href="{{ route('cart.show', $list) }}" wire:navigate class="min-w-48 flex-1">
                             <flux:heading size="sm" class="flex items-center gap-2">
                                 {{ $list->name }}

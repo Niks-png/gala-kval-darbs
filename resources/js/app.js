@@ -34,9 +34,25 @@ function initStoreMap() {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
-    const markers = stores.map((store) => L.marker([store.lat, store.lng])
-        .addTo(map)
-        .bindPopup(`<strong>${store.name}</strong><br>${store.address}, ${store.city}`));
+    const chainColors = {
+        'maxima.lv': '#e30613',
+        'etop.lv': '#00843d',
+    };
+
+    const markers = stores.map((store) => {
+        const color = chainColors[store.chain] ?? '#3388ff';
+        const icon = L.divIcon({
+            className: '',
+            html: `<span style="display:block;width:16px;height:16px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 2px rgba(0,0,0,0.6);"></span>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+            popupAnchor: [0, -8],
+        });
+
+        return L.marker([store.lat, store.lng], { icon })
+            .addTo(map)
+            .bindPopup(`<strong>${store.name}</strong><br>${store.address}, ${store.city}`);
+    });
 
     if (markers.length) {
         map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));

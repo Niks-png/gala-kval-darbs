@@ -41,14 +41,15 @@ class ImportProductsCommand extends Command
         $header = $file->fgetcsv();
         $hasStoreColumn = $header === ['title', 'store', 'original_price', 'current_price'];
         $hasUnitColumns = $header === ['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit'];
+        $hasImageColumn = $header === ['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url'];
         $legacyHeader = ['title', 'original_price', 'current_price'];
 
-        if (! $hasStoreColumn && ! $hasUnitColumns && $header !== $legacyHeader) {
+        if (! $hasStoreColumn && ! $hasUnitColumns && ! $hasImageColumn && $header !== $legacyHeader) {
             throw new RuntimeException('The product CSV has an unsupported header.');
         }
 
         $storeOption = trim((string) $this->option('store'));
-        if (! $hasStoreColumn && ! $hasUnitColumns && $storeOption === '') {
+        if (! $hasStoreColumn && ! $hasUnitColumns && ! $hasImageColumn && $storeOption === '') {
             throw new RuntimeException('The --store option is required when importing a legacy product CSV.');
         }
 
@@ -60,17 +61,22 @@ class ImportProductsCommand extends Command
                 continue;
             }
 
-            if ($hasUnitColumns) {
+            if ($hasImageColumn) {
+                [$title, $store, $originalPrice, $currentPrice, $unitPrice, $unit, $imageUrl] = array_pad($row, 7, null);
+            } elseif ($hasUnitColumns) {
                 [$title, $store, $originalPrice, $currentPrice, $unitPrice, $unit] = array_pad($row, 6, null);
+                $imageUrl = null;
             } elseif ($hasStoreColumn) {
                 [$title, $store, $originalPrice, $currentPrice] = array_pad($row, 4, null);
                 $unitPrice = null;
                 $unit = null;
+                $imageUrl = null;
             } else {
                 [$title, $originalPrice, $currentPrice] = array_pad($row, 3, null);
                 $store = $storeOption;
                 $unitPrice = null;
                 $unit = null;
+                $imageUrl = null;
             }
             $title = trim((string) $title);
             $store = trim((string) $store);
@@ -87,6 +93,7 @@ class ImportProductsCommand extends Command
                 'price' => $this->nullablePrice($currentPrice) ?? '0.00',
                 'unit_price' => $this->nullablePrice($unitPrice),
                 'unit' => $this->nullableValue($unit),
+                'image_url' => $this->nullableValue($imageUrl),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -117,7 +124,7 @@ class ImportProductsCommand extends Command
             Product::upsert(
                 $products,
                 ['title', 'store'],
-                ['original_price', 'current_price', 'price', 'unit_price', 'unit', 'updated_at'],
+                ['original_price', 'current_price', 'price', 'unit_price', 'unit', 'image_url', 'updated_at'],
             );
 
             if ($priceChanges !== []) {
