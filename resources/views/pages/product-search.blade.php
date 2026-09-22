@@ -11,22 +11,22 @@
 
         <form method="GET" action="{{ route('products.search') }}" class="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div class="flex-1">
-                <label for="filter-query" class="mb-1 block text-sm text-zinc-500">{{ __('Search products') }}</label>
+                <label for="filter-query" class="mb-1 block text-sm text-neutral-500">{{ __('Search products') }}</label>
                 <input
                     id="filter-query"
                     type="search"
                     name="q"
                     value="{{ $query }}"
                     placeholder="{{ __('Search products') }}"
-                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                    class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
                 >
             </div>
             <div class="sm:w-48">
-                <label for="filter-store" class="mb-1 block text-sm text-zinc-500">{{ __('Store') }}</label>
+                <label for="filter-store" class="mb-1 block text-sm text-neutral-500">{{ __('Store') }}</label>
                 <select
                     id="filter-store"
                     name="store"
-                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                    class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
                 >
                     <option value="">{{ __('All stores') }}</option>
                     @foreach ($stores as $storeOption)
@@ -35,11 +35,11 @@
                 </select>
             </div>
             <div class="sm:w-48">
-                <label for="filter-category" class="mb-1 block text-sm text-zinc-500">{{ __('Category') }}</label>
+                <label for="filter-category" class="mb-1 block text-sm text-neutral-500">{{ __('Category') }}</label>
                 <select
                     id="filter-category"
                     name="category"
-                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                    class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
                 >
                     <option value="">{{ __('All categories') }}</option>
                     @foreach ($categories as $categoryOption)
@@ -52,7 +52,7 @@
                     {{ __('Filter') }}
                 </button>
                 @if ($query !== '' || $store !== '' || $category !== '')
-                    <a href="{{ route('products.search') }}" class="rounded-lg border border-zinc-300 px-5 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                    <a href="{{ route('products.search') }}" class="rounded-lg border border-neutral-300 px-5 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-800">
                         {{ __('Reset') }}
                     </a>
                 @endif
@@ -68,7 +68,15 @@
                 @foreach ($products as $product)
                     <form method="POST" action="{{ route('cart.items.store', $product) }}" class="add-to-cart-form">
                         @csrf
-                        <button type="submit" class="block w-full rounded-xl border border-neutral-200 p-4 text-start transition hover:border-emerald-500 hover:shadow-md dark:border-neutral-700">
+                        <button type="submit" class="block w-full overflow-hidden rounded-xl border border-neutral-200 text-start shadow-sm transition hover:border-emerald-500 hover:shadow-md dark:border-neutral-700">
+                        <div class="flex h-32 items-center justify-center bg-neutral-50 dark:bg-neutral-800">
+                            @if ($product->image_url)
+                                <img src="{{ $product->image_url }}" alt="" class="h-full w-full object-contain p-2" loading="lazy">
+                            @else
+                                <flux:icon.photo class="size-8 text-neutral-300 dark:text-neutral-600" />
+                            @endif
+                        </div>
+                        <div class="p-4">
                         <flux:heading size="sm">{{ $product->title }}</flux:heading>
                         <flux:text class="mt-1">{{ $product->store }}</flux:text>
                         <div class="mt-4 flex items-baseline justify-between gap-3">
@@ -76,7 +84,7 @@
                                 {{ $product->current_price !== null ? number_format((float) $product->current_price, 2) . ' €' : '—' }}
                             </flux:heading>
                             @if ($product->latestPriceHistory)
-                                <flux:text class="text-zinc-500 line-through">
+                                <flux:text class="text-neutral-500 line-through">
                                     {{ number_format((float) $product->latestPriceHistory->previous_price, 2) }} €
                                 </flux:text>
                             @endif
@@ -85,6 +93,7 @@
                             @endif
                         </div>
                         <flux:text class="mt-3 text-emerald-600 dark:text-emerald-400">{{ __('Add to cart') }}</flux:text>
+                        </div>
                         </button>
                     </form>
                 @endforeach

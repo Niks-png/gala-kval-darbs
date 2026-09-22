@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['title', 'store', 'category', 'description', 'price', 'original_price', 'current_price', 'unit_price', 'unit'])]
+#[Fillable(['title', 'store', 'category', 'description', 'price', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url'])]
 class Product extends Model
 {
     public function priceHistory(): HasMany

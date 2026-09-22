@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -13,6 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 URL = "https://www.maxima.lv/bukleti"
+BASE_URL = "https://www.maxima.lv"
 STORE = "maxima.lv"
 OUTPUT_FILE = Path(__file__).with_name("maxima_products.csv")
 OFFER_SELECTOR = ".offer-item"
@@ -62,6 +64,10 @@ def extract_product(item) -> dict[str, str]:
     size, unit = get_unit_size(title_value)
     unit_price = current_price / size if current_price and size else None
 
+    image = item.select_one('img[src*="/uploads/"]') or item.select_one("img")
+    image_src = image.get("src", "").strip() if image else ""
+    image_url = urljoin(BASE_URL, image_src) if image_src else ""
+
     return {
         "title": title_value,
         "store": STORE,
@@ -69,6 +75,7 @@ def extract_product(item) -> dict[str, str]:
         "current_price": f"{current_price:.2f}" if current_price else "",
         "unit_price": f"{unit_price:.2f}" if unit_price and unit else "",
         "unit": f"€/{unit}" if unit_price and unit else "",
+        "image_url": image_url,
     }
 
 
@@ -115,6 +122,7 @@ with OUTPUT_FILE.open("w", newline="", encoding="utf-8") as csvfile:
         "current_price",
         "unit_price",
         "unit",
+        "image_url",
     ]
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
