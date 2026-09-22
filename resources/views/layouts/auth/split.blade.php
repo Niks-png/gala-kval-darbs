@@ -5,24 +5,36 @@
     </head>
     <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
         <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-e dark:border-neutral-800">
-                <div class="absolute inset-0 bg-neutral-900"></div>
+            <div class="relative hidden h-full flex-col overflow-hidden p-10 text-white lg:flex">
+                <div class="absolute inset-0 bg-linear-to-br from-emerald-900 via-emerald-950 to-neutral-950"></div>
+                <div class="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_35%)]"></div>
+
                 <a href="{{ route('home') }}" class="relative z-20 flex items-center text-lg font-medium" wire:navigate>
                     <span class="flex h-10 w-10 items-center justify-center rounded-md">
                         <x-app-logo-icon class="me-2 h-7 fill-current text-white" />
                     </span>
-                    {{ config('app.name', 'Laravel') }}
+                    {{ __('Recepšu un cenu ceļvedis') }}
                 </a>
 
-                @php
-                    [$message, $author] = str(Illuminate\Foundation\Inspiring::quotes()->random())->explode('-');
-                @endphp
-
                 <div class="relative z-20 mt-auto">
-                    <blockquote class="space-y-2">
-                        <flux:heading size="lg">&ldquo;{{ trim($message) }}&rdquo;</flux:heading>
-                        <footer><flux:heading>{{ trim($author) }}</flux:heading></footer>
-                    </blockquote>
+                    <flux:heading size="xl" class="text-white">
+                        {{ __('Atrodi ko pagatavot no tā, kas jau ir tavā virtuvē.') }}
+                    </flux:heading>
+
+                    <ul class="mt-8 space-y-5">
+                        <li class="flex items-start gap-3">
+                            <flux:icon.book-open-text class="mt-0.5 size-5 shrink-0 text-emerald-300" />
+                            <span class="text-sm text-emerald-50">{{ __('Ievadi produktus, kas tev ir mājās, un atrodi piemērotas receptes.') }}</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <flux:icon.chart-bar class="mt-0.5 size-5 shrink-0 text-emerald-300" />
+                            <span class="text-sm text-emerald-50">{{ __('Seko produktu cenu izmaiņām un atrodi izdevīgāko piedāvājumu.') }}</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <flux:icon.map class="mt-0.5 size-5 shrink-0 text-emerald-300" />
+                            <span class="text-sm text-emerald-50">{{ __('Apskati tuvākos Maxima un top! veikalus kartē visā Latvijā.') }}</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
             <div class="w-full lg:p-8">

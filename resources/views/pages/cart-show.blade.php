@@ -11,7 +11,7 @@
             @else
                 <div class="mt-6 space-y-3">
                     @foreach ($list->products as $product)
-                        <div class="flex items-center justify-between rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+                        <div class="flex items-center justify-between rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
                             <div>
                                 <flux:heading size="sm">{{ $product->title }}</flux:heading>
                                 <flux:text>{{ $product->store }}</flux:text>

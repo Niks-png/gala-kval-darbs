@@ -5,7 +5,7 @@
             <flux:text class="mt-2">Ievadi produktus, kas tev ir mājās, un atrodi piemērotas receptes.</flux:text>
         </div>
 
-        <div class="rounded-xl border border-neutral-200 p-5 dark:border-neutral-700">
+        <div class="rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700">
             <form id="ingredient-form" class="flex flex-col gap-3 sm:flex-row">
                 <input
                     id="ingredient-input"
@@ -20,7 +20,7 @@
             </form>
             <div id="ingredient-list" class="mt-3 flex flex-wrap gap-2"></div>
             <div class="mt-4 flex flex-wrap items-center gap-3">
-                <button id="find-recipes" type="button" class="rounded-lg bg-neutral-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+                <button id="find-recipes" type="button" class="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
                     Meklēt receptes
                 </button>
                 <button id="clear-ingredients" type="button" class="text-sm text-neutral-500 underline-offset-4 hover:underline">
@@ -130,7 +130,7 @@
                     const sorted = [...recipes.values()].sort((a, b) => b.matches - a.matches).slice(0, 18);
                     setStatus(sorted.length ? `Atrastas ${sorted.length} receptes.` : 'Šiem produktiem receptes netika atrastas.');
                     results.innerHTML = sorted.map((meal) => `
-                        <article class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+                        <article class="overflow-hidden rounded-xl border border-neutral-200 shadow-sm transition hover:shadow-md dark:border-neutral-700">
                             <img src="${escapeHtml(meal.strMealThumb)}" alt="" class="h-44 w-full object-cover">
                             <div class="p-4">
                                 <h2 class="font-semibold">${escapeHtml(meal.strMeal)}</h2>
