@@ -38,6 +38,9 @@
                                 @if ($isActive)
                                     <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">{{ __('Aktīvs') }}</span>
                                 @endif
+                                @if ($list->members_count > 0)
+                                    <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ __('Kopīgots ar :count', ['count' => $list->members_count]) }}</span>
+                                @endif
                             </flux:heading>
                             <flux:text class="mt-1">
                                 {{ __(':count preces', ['count' => $itemCount]) }} · {{ number_format($total, 2) }} €
@@ -65,6 +68,52 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-sm text-red-600 transition hover:text-red-700">{{ __('Dzēst') }}</button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+        @if ($sharedLists->isNotEmpty())
+            <div class="mt-4">
+                <flux:heading size="lg">{{ __('Kopīgoti ar mani') }}</flux:heading>
+                <flux:text class="mt-1">{{ __('Saraksti, kuros tevi uzaicināja citi lietotāji.') }}</flux:text>
+            </div>
+            <div class="space-y-3">
+                @foreach ($sharedLists as $list)
+                    @php
+                        $itemCount = $list->products->sum('pivot.quantity');
+                        $total = $list->products->sum(fn ($product) => (float) ($product->current_price ?? 0) * $product->pivot->quantity);
+                        $isActive = $list->id === $activeListId;
+                        $canEdit = $list->pivot->role === \App\Models\ShoppingList::ROLE_EDITOR;
+                    @endphp
+                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 shadow-sm transition hover:shadow-md dark:border-neutral-700 {{ $isActive ? 'border-emerald-500' : 'border-neutral-200' }}">
+                        <a href="{{ route('cart.show', $list) }}" wire:navigate class="min-w-48 flex-1">
+                            <flux:heading size="sm" class="flex items-center gap-2">
+                                {{ $list->name }}
+                                @if ($isActive)
+                                    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">{{ __('Aktīvs') }}</span>
+                                @endif
+                                <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ $canEdit ? __('Rediģētājs') : __('Skatītājs') }}</span>
+                            </flux:heading>
+                            <flux:text class="mt-1">
+                                {{ __('Īpašnieks: :name', ['name' => $list->user->name]) }} · {{ __(':count preces', ['count' => $itemCount]) }} · {{ number_format($total, 2) }} €
+                            </flux:text>
+                        </a>
+                        <div class="flex items-center gap-2">
+                            @if ($canEdit && ! $isActive)
+                                <form method="POST" action="{{ route('cart.activate', $list) }}">
+                                    @csrf
+                                    <button type="submit" class="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm transition hover:border-emerald-500 hover:text-emerald-600 dark:border-neutral-600">
+                                        {{ __('Aktivizēt') }}
+                                    </button>
+                                </form>
+                            @endif
+                            <form method="POST" action="{{ route('cart.members.destroy', [$list, auth()->user()]) }}" onsubmit="return confirm('{{ __('Pamest šo sarakstu?') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-sm text-red-600 transition hover:text-red-700">{{ __('Pamest') }}</button>
                             </form>
                         </div>
                     </div>

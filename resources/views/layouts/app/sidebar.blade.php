@@ -1,3 +1,4 @@
+@php($pendingInvitations = auth()->user()->shoppingListInvitations()->count())
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
@@ -25,6 +26,9 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="chart-bar" :href="route('price-history')" :current="request()->routeIs('price-history')" wire:navigate>
                     {{ __('Cenu vēsture') }}
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="bell" :href="route('notifications')" :current="request()->routeIs('notifications')" :badge="$pendingInvitations ?: null" wire:navigate>
+                    {{ __('Paziņojumi') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>
 
@@ -55,6 +59,15 @@
 
             <flux:navbar>
                 <flux:navbar.item
+                    icon="bell"
+                    :href="route('notifications')"
+                    :current="request()->routeIs('notifications')"
+                    :label="__('Paziņojumi')"
+                    :badge="$pendingInvitations ?: null"
+                    badge:color="red"
+                    wire:navigate
+                />
+                <flux:navbar.item
                     icon="shopping-cart"
                     :href="route('cart')"
                     :current="request()->routeIs('cart')"
@@ -69,6 +82,17 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
+
+            <flux:navbar>
+                <flux:navbar.item
+                    icon="bell"
+                    :href="route('notifications')"
+                    :label="__('Paziņojumi')"
+                    :badge="$pendingInvitations ?: null"
+                    badge:color="red"
+                    wire:navigate
+                />
+            </flux:navbar>
 
             <flux:dropdown position="top" align="end">
                 <flux:profile

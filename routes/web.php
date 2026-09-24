@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\ShoppingListController;
+use App\Http\Controllers\ShoppingListInvitationController;
+use App\Http\Controllers\ShoppingListInviteController;
+use App\Http\Controllers\ShoppingListMemberController;
 use App\Models\Product;
 use App\Models\ProductPriceHistory;
 use App\Models\Store;
@@ -43,6 +46,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('cart/{shoppingList}', [ShoppingListController::class, 'update'])->name('cart.update');
     Route::delete('cart/{shoppingList}', [ShoppingListController::class, 'destroy'])->name('cart.destroy');
     Route::post('cart/{shoppingList}/activate', [ShoppingListController::class, 'activate'])->name('cart.activate');
+    Route::get('notifications', [ShoppingListInvitationController::class, 'index'])->name('notifications');
+    Route::post('invitations/{invitation}/accept', [ShoppingListInvitationController::class, 'accept'])->name('invitations.accept');
+    Route::delete('invitations/{invitation}', [ShoppingListInvitationController::class, 'destroy'])->name('invitations.destroy');
+    Route::get('cart/join/{token}', [ShoppingListInviteController::class, 'accept'])->name('cart.invite.accept');
+    Route::post('cart/{shoppingList}/invite-link', [ShoppingListInviteController::class, 'store'])->name('cart.invite.store');
+    Route::delete('cart/{shoppingList}/invite-link', [ShoppingListInviteController::class, 'destroy'])->name('cart.invite.destroy');
+    Route::post('cart/{shoppingList}/members', [ShoppingListMemberController::class, 'store'])->name('cart.members.store');
+    Route::patch('cart/{shoppingList}/members/{user}', [ShoppingListMemberController::class, 'update'])->name('cart.members.update');
+    Route::delete('cart/{shoppingList}/members/{user}', [ShoppingListMemberController::class, 'destroy'])->name('cart.members.destroy');
     Route::get('price-history', function (Request $request) {
         $query = trim((string) $request->string('q'));
         $store = trim((string) $request->string('store'));

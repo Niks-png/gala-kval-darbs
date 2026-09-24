@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -49,6 +50,18 @@ class User extends Authenticatable
     public function shoppingLists(): HasMany
     {
         return $this->hasMany(ShoppingList::class);
+    }
+
+    public function shoppingListInvitations(): HasMany
+    {
+        return $this->hasMany(ShoppingListInvitation::class);
+    }
+
+    public function sharedShoppingLists(): BelongsToMany
+    {
+        return $this->belongsToMany(ShoppingList::class)
+            ->withPivot('role')
+            ->withTimestamps();
     }
 
     /**

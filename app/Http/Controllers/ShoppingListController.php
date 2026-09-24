@@ -7,19 +7,29 @@ use App\Models\ShoppingList;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class ShoppingListController extends Controller
 {
     public function index(Request $request): View
     {
-        $lists = $request->user()->shoppingLists()
+        $user = $request->user();
+
+        $lists = $user->shoppingLists()
             ->with('products')
+            ->withCount('members')
             ->orderBy('created_at')
+            ->get();
+
+        $sharedLists = $user->sharedShoppingLists()
+            ->with(['products', 'user'])
+            ->orderBy('shopping_lists.created_at')
             ->get();
 
         return view('pages.cart', [
             'lists' => $lists,
+            'sharedLists' => $sharedLists,
             'activeListId' => $this->activeList($request)->id,
         ]);
     }
@@ -39,18 +49,19 @@ class ShoppingListController extends Controller
 
     public function show(Request $request, ShoppingList $shoppingList): View
     {
-        $this->authorizeList($request, $shoppingList);
+        Gate::authorize('view', $shoppingList);
 
-        $shoppingList->load('products.latestPriceHistory');
+        $shoppingList->load(['products.latestPriceHistory', 'user', 'members', 'invitations.user']);
 
         return view('pages.cart-show', [
             'list' => $shoppingList,
+            'role' => $shoppingList->roleFor($request->user()),
         ]);
     }
 
     public function update(Request $request, ShoppingList $shoppingList): RedirectResponse
     {
-        $this->authorizeList($request, $shoppingList);
+        Gate::authorize('manage', $shoppingList);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -63,7 +74,7 @@ class ShoppingListController extends Controller
 
     public function destroy(Request $request, ShoppingList $shoppingList): RedirectResponse
     {
-        $this->authorizeList($request, $shoppingList);
+        Gate::authorize('manage', $shoppingList);
 
         $shoppingList->delete();
 
@@ -76,7 +87,7 @@ class ShoppingListController extends Controller
 
     public function activate(Request $request, ShoppingList $shoppingList): RedirectResponse
     {
-        $this->authorizeList($request, $shoppingList);
+        Gate::authorize('editItems', $shoppingList);
 
         $request->session()->put('active_shopping_list_id', $shoppingList->id);
 
@@ -96,7 +107,7 @@ class ShoppingListController extends Controller
 
     public function increase(Request $request, ShoppingList $shoppingList, Product $product): RedirectResponse
     {
-        $this->authorizeList($request, $shoppingList);
+        Gate::authorize('editItems', $shoppingList);
 
         $this->incrementItem($shoppingList, $product);
 
@@ -105,7 +116,7 @@ class ShoppingListController extends Controller
 
     public function decrease(Request $request, ShoppingList $shoppingList, Product $product): RedirectResponse
     {
-        $this->authorizeList($request, $shoppingList);
+        Gate::authorize('editItems', $shoppingList);
 
         $existing = $shoppingList->products()->where('product_id', $product->id)->first();
         $quantity = ($existing?->pivot->quantity ?? 0) - 1;
@@ -121,7 +132,7 @@ class ShoppingListController extends Controller
 
     public function destroyItem(Request $request, ShoppingList $shoppingList, Product $product): RedirectResponse
     {
-        $this->authorizeList($request, $shoppingList);
+        Gate::authorize('editItems', $shoppingList);
 
         $shoppingList->products()->detach($product->id);
 
@@ -147,7 +158,7 @@ class ShoppingListController extends Controller
         $activeId = $request->session()->get('active_shopping_list_id');
 
         $list = $activeId
-            ? $user->shoppingLists()->find($activeId)
+            ? ShoppingList::query()->editableBy($user)->find($activeId)
             : null;
 
         $list ??= $user->shoppingLists()->orderBy('created_at')->first();
@@ -157,10 +168,5 @@ class ShoppingListController extends Controller
         $request->session()->put('active_shopping_list_id', $list->id);
 
         return $list;
-    }
-
-    private function authorizeList(Request $request, ShoppingList $shoppingList): void
-    {
-        abort_unless($shoppingList->user_id === $request->user()->id, 403);
     }
 }
