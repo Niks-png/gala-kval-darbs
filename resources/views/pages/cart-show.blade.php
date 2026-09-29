@@ -54,45 +54,29 @@
                 <flux:text class="mt-2 text-emerald-600 dark:text-emerald-400">{{ session('success') }}</flux:text>
             @endif
 
-            @if ($list->products->isEmpty())
-                <flux:text class="mt-2">{{ __('Šis saraksts ir tukšs.') }}</flux:text>
-            @else
-                <div class="mt-6 space-y-3">
-                    @foreach ($list->products as $product)
-                        <div class="flex items-center justify-between rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
-                            <div>
-                                <flux:heading size="sm">{{ $product->title }}</flux:heading>
-                                <flux:text>{{ $product->store }}</flux:text>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                @if ($canEdit)
-                                    <form method="POST" action="{{ route('cart.lists.items.decrease', [$list, $product]) }}">
-                                        @csrf
-                                        <button type="submit" class="flex size-8 items-center justify-center rounded-full border border-neutral-300 text-lg transition hover:border-emerald-500 hover:text-emerald-600 dark:border-neutral-600" aria-label="{{ __('Decrease quantity') }}">-</button>
-                                    </form>
-                                @endif
-                                <span class="min-w-6 text-center">{{ $canEdit ? '' : '× ' }}{{ $product->pivot->quantity }}</span>
-                                @if ($canEdit)
-                                    <form method="POST" action="{{ route('cart.lists.items.store', [$list, $product]) }}">
-                                        @csrf
-                                        <button type="submit" class="flex size-8 items-center justify-center rounded-full border border-neutral-300 text-lg transition hover:border-emerald-500 hover:text-emerald-600 dark:border-neutral-600" aria-label="{{ __('Increase quantity') }}">+</button>
-                                    </form>
-                                @endif
-                                <flux:heading size="sm">
-                                    {{ $product->current_price !== null ? number_format((float) $product->current_price * $product->pivot->quantity, 2) . ' €' : '—' }}
-                                </flux:heading>
-                                @if ($canEdit)
-                                    <form method="POST" action="{{ route('cart.lists.items.destroy', [$list, $product]) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-sm text-red-600 transition hover:text-red-700" aria-label="{{ __('Remove item') }}">{{ __('Remove') }}</button>
-                                    </form>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
+            @if ($list->isCompleted())
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+                    <flux:text>
+                        {{ __('Iepirkšanās pabeigta :date. Iztērēti :total €.', ['date' => $list->completed_at->format('d.m.Y'), 'total' => number_format((float) $list->completed_total, 2)]) }}
+                    </flux:text>
+                    @if ($canEdit)
+                        <form method="POST" action="{{ route('cart.reopen', $list) }}">
+                            @csrf
+                            @method('DELETE')
+                            <flux:button type="submit" size="sm">{{ __('Atvērt no jauna') }}</flux:button>
+                        </form>
+                    @endif
                 </div>
+            @elseif ($canEdit && $list->products()->exists())
+                <form method="POST" action="{{ route('cart.complete', $list) }}" class="mt-4"
+                    onsubmit="return confirm('{{ __('Pabeigt iepirkšanos? Saraksts tiks saglabāts vēsturē.') }}')">
+                    @csrf
+                    <flux:button type="submit" variant="primary" icon="check">{{ __('Pabeigt iepirkšanos') }}</flux:button>
+                    <flux:text class="mt-1 text-xs">{{ __('Ja preces ir atzīmētas kā nopirktas, tiks saskaitītas tikai tās.') }}</flux:text>
+                </form>
             @endif
+
+            <livewire:shopping-list-items :list="$list" />
         </div>
     </div>
 

@@ -35,6 +35,27 @@ test('scraped products are imported and existing products are updated', function
     unlink($csvPath);
 });
 
+test('imported products get a category and existing products can be categorized', function () {
+    $csvPath = tempnam(sys_get_temp_dir(), 'products-');
+
+    file_put_contents($csvPath, implode("\n", [
+        'title,store,original_price,current_price,unit_price,unit',
+        "ČIPSI LAY'S AR SIERA GARŠU 180G,etop.lv,,1.99,11.06,€/kg",
+    ]));
+
+    $this->artisan('products:import', ['file' => $csvPath])->assertSuccessful();
+
+    expect(Product::first()->category)->toBe('Uzkodas, rieksti un sēklas');
+
+    unlink($csvPath);
+
+    $milk = Product::query()->create(['title' => 'PIENS OPĀ 2.5% 0.9L', 'store' => 'etop.lv']);
+
+    $this->artisan('products:categorize')->assertSuccessful();
+
+    expect($milk->fresh()->category)->toBe('Piena produkti un olas');
+});
+
 test('legacy scraped products use the supplied store', function () {
     $csvPath = tempnam(sys_get_temp_dir(), 'products-');
 

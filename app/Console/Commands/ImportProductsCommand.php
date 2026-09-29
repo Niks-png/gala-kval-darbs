@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Product;
 use App\Models\ProductPriceHistory;
+use App\Services\ProductCategorizer;
 use Illuminate\Console\Command;
 use RuntimeException;
 use SplFileObject;
@@ -22,7 +23,7 @@ class ImportProductsCommand extends Command
      */
     protected $description = 'Import scraped products into the database';
 
-    public function handle(): int
+    public function handle(ProductCategorizer $categorizer): int
     {
         $fileArgument = (string) $this->argument('file');
         $filePath = preg_match('/^(?:[A-Za-z]:[\\\\\/]|[\\\\\/])/', $fileArgument)
@@ -88,6 +89,7 @@ class ImportProductsCommand extends Command
             $products[] = [
                 'title' => $title,
                 'store' => $store,
+                'category' => $categorizer->categorize($title),
                 'original_price' => $this->nullableValue($originalPrice),
                 'current_price' => $this->nullablePrice($currentPrice),
                 'price' => $this->nullablePrice($currentPrice) ?? '0.00',
@@ -124,7 +126,7 @@ class ImportProductsCommand extends Command
             Product::upsert(
                 $products,
                 ['title', 'store'],
-                ['original_price', 'current_price', 'price', 'unit_price', 'unit', 'image_url', 'updated_at'],
+                ['category', 'original_price', 'current_price', 'price', 'unit_price', 'unit', 'image_url', 'updated_at'],
             );
 
             if ($priceChanges !== []) {

@@ -7,6 +7,7 @@ use App\Models\ShoppingList;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -15,23 +16,76 @@ class ShoppingListController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
+        $activeListId = $this->activeList($request)->id;
 
         $lists = $user->shoppingLists()
+            ->open()
             ->with('products')
             ->withCount('members')
             ->orderBy('created_at')
             ->get();
 
         $sharedLists = $user->sharedShoppingLists()
+            ->open()
             ->with(['products', 'user'])
             ->orderBy('shopping_lists.created_at')
+            ->get();
+
+        $completedLists = ShoppingList::query()
+            ->visibleTo($user)
+            ->completed()
+            ->with(['products', 'user'])
+            ->orderByDesc('completed_at')
             ->get();
 
         return view('pages.cart', [
             'lists' => $lists,
             'sharedLists' => $sharedLists,
-            'activeListId' => $this->activeList($request)->id,
+            'completedLists' => $completedLists,
+            'monthlySpending' => $this->monthlySpending($completedLists),
+            'activeListId' => $activeListId,
         ]);
+    }
+
+    public function complete(ShoppingList $shoppingList): RedirectResponse
+    {
+        Gate::authorize('complete', $shoppingList);
+
+        if (! $shoppingList->isCompleted()) {
+            $shoppingList->complete();
+        }
+
+        return to_route('cart.show', $shoppingList)
+            ->with('success', __('Iepirkšanās pabeigta. Iztērēti :total €', ['total' => number_format((float) $shoppingList->completed_total, 2)]));
+    }
+
+    public function reopen(ShoppingList $shoppingList): RedirectResponse
+    {
+        Gate::authorize('complete', $shoppingList);
+
+        $shoppingList->reopen();
+
+        return to_route('cart.show', $shoppingList)->with('success', __('Saraksts atvērts no jauna'));
+    }
+
+    /**
+     * Add a product to a chosen list (used by the product page).
+     */
+    public function storeItem(Request $request, Product $product): RedirectResponse
+    {
+        $validated = $request->validate([
+            'shopping_list_id' => ['required', 'integer'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        $list = ShoppingList::query()->findOrFail($validated['shopping_list_id']);
+
+        Gate::authorize('editItems', $list);
+
+        $list->addProduct($product->id, (int) $validated['quantity']);
+        $request->session()->put('active_shopping_list_id', $list->id);
+
+        return back()->with('success', __('Produkts pievienots sarakstam ":list"', ['list' => $list->name]));
     }
 
     public function store(Request $request): RedirectResponse
@@ -51,7 +105,7 @@ class ShoppingListController extends Controller
     {
         Gate::authorize('view', $shoppingList);
 
-        $shoppingList->load(['products.latestPriceHistory', 'user', 'members', 'invitations.user']);
+        $shoppingList->load(['user', 'members', 'invitations.user']);
 
         return view('pages.cart-show', [
             'list' => $shoppingList,
@@ -118,14 +172,7 @@ class ShoppingListController extends Controller
     {
         Gate::authorize('editItems', $shoppingList);
 
-        $existing = $shoppingList->products()->where('product_id', $product->id)->first();
-        $quantity = ($existing?->pivot->quantity ?? 0) - 1;
-
-        if ($quantity > 0) {
-            $shoppingList->products()->updateExistingPivot($product->id, ['quantity' => $quantity]);
-        } else {
-            $shoppingList->products()->detach($product->id);
-        }
+        $shoppingList->decreaseProduct($product->id);
 
         return to_route('cart.show', $shoppingList);
     }
@@ -139,17 +186,35 @@ class ShoppingListController extends Controller
         return to_route('cart.show', $shoppingList);
     }
 
+    /**
+     * Add several products at once to the active list (used by the recipe page).
+     */
+    public function storeMany(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_ids' => ['required', 'array', 'max:50'],
+            'product_ids.*' => ['integer', 'distinct', 'exists:products,id'],
+        ]);
+
+        $list = $this->activeList($request);
+
+        foreach ($validated['product_ids'] as $productId) {
+            $list->addProduct((int) $productId);
+        }
+
+        return response()->json([
+            'message' => trans_choice(
+                '{1} :count produkts pievienots sarakstam ":list"|[2,*] :count produkti pievienoti sarakstam ":list"',
+                count($validated['product_ids']),
+                ['list' => $list->name],
+            ),
+            'url' => route('cart.show', $list),
+        ]);
+    }
+
     private function incrementItem(ShoppingList $list, Product $product): void
     {
-        $existing = $list->products()->where('product_id', $product->id)->first();
-
-        if ($existing) {
-            $list->products()->updateExistingPivot($product->id, [
-                'quantity' => $existing->pivot->quantity + 1,
-            ]);
-        } else {
-            $list->products()->attach($product->id, ['quantity' => 1]);
-        }
+        $list->addProduct($product->id);
     }
 
     private function activeList(Request $request): ShoppingList
@@ -158,15 +223,37 @@ class ShoppingListController extends Controller
         $activeId = $request->session()->get('active_shopping_list_id');
 
         $list = $activeId
-            ? ShoppingList::query()->editableBy($user)->find($activeId)
+            ? ShoppingList::query()->editableBy($user)->open()->find($activeId)
             : null;
 
-        $list ??= $user->shoppingLists()->orderBy('created_at')->first();
+        $list ??= $user->shoppingLists()->open()->orderBy('created_at')->first();
 
         $list ??= $user->shoppingLists()->create(['name' => 'Mans saraksts']);
 
         $request->session()->put('active_shopping_list_id', $list->id);
 
         return $list;
+    }
+
+    /**
+     * Money spent on finished lists in each of the last six months, oldest first.
+     *
+     * @param  Collection<int, ShoppingList>  $completedLists
+     * @return Collection<int, array{label: string, total: float}>
+     */
+    private function monthlySpending(Collection $completedLists): Collection
+    {
+        $totals = $completedLists
+            ->groupBy(fn (ShoppingList $list): string => $list->completed_at->format('Y-m'))
+            ->map(fn (Collection $lists): float => (float) $lists->sum('completed_total'));
+
+        return collect(range(5, 0))->map(function (int $monthsAgo) use ($totals): array {
+            $month = now()->startOfMonth()->subMonths($monthsAgo);
+
+            return [
+                'label' => $month->translatedFormat('F'),
+                'total' => $totals->get($month->format('Y-m'), 0.0),
+            ];
+        });
     }
 }

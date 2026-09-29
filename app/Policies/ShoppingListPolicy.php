@@ -16,9 +16,17 @@ class ShoppingListPolicy
     }
 
     /**
-     * Owners and editors can add, change and remove items.
+     * Owners and editors can add, change and remove items while the list is open.
      */
     public function editItems(User $user, ShoppingList $shoppingList): bool
+    {
+        return ! $shoppingList->isCompleted() && $this->complete($user, $shoppingList);
+    }
+
+    /**
+     * Owners and editors can finish shopping and reopen a finished list.
+     */
+    public function complete(User $user, ShoppingList $shoppingList): bool
     {
         return in_array($shoppingList->roleFor($user), ['owner', ShoppingList::ROLE_EDITOR], true);
     }

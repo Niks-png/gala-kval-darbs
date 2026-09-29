@@ -63,7 +63,7 @@ test('price history does not flag an unchanged snapshot as a price change', func
     $this->actingAs($user)
         ->get(route('price-history'))
         ->assertOk()
-        ->assertSee('No change yet');
+        ->assertSee('Vēl bez izmaiņām');
 });
 
 test('price history filters by search query and store', function () {

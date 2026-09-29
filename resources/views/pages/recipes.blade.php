@@ -164,17 +164,106 @@
                             </div>
                             <h3 class="mt-6 font-semibold">Sastāvdaļas</h3>
                             <ul class="mt-2 grid gap-1 sm:grid-cols-2">${pairs.map(([name, measure]) => `<li class="text-sm">${escapeHtml(measure || '')} ${escapeHtml(name)}</li>`).join('')}</ul>
+                            <section class="mt-6 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
+                                <h3 class="font-semibold">Iepirkt sastāvdaļas</h3>
+                                <p class="mt-1 text-xs text-neutral-500">Lētākie atbilstošie produkti no veikaliem. Noņem ķeksīti tam, kas jau ir mājās.</p>
+                                <div id="recipe-shopping" class="mt-3 text-sm">Meklējam produktus...</div>
+                            </section>
                             <h3 class="mt-6 font-semibold">Pagatavošana</h3>
                             <p class="mt-2 whitespace-pre-line text-sm leading-6">${escapeHtml(meal.strInstructions || 'Norādes nav pieejamas.')}</p>
                         </div>
                     `;
+                    loadProductMatches(pairs.map(([name]) => name.trim()));
                 } catch (error) {
                     details.innerHTML = '<div class="p-6">Recepti neizdevās ielādēt.</div>';
                 }
             });
 
-            details.addEventListener('click', (event) => {
+            const csrfToken = @json(csrf_token());
+            const postJson = (url, body) => fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify(body),
+            }).then((response) => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            });
+            const formatPrice = (price) => `${Number(price).toFixed(2)} €`;
+
+            async function loadProductMatches(names) {
+                const container = document.getElementById('recipe-shopping');
+                try {
+                    const { matches } = await postJson(@json(route('recipes.match')), { ingredients: names });
+                    const found = matches.filter((match) => match.product);
+                    if (!found.length) {
+                        container.textContent = 'Veikalos neatradām nevienu atbilstošu produktu.';
+                        return;
+                    }
+
+                    container.innerHTML = `
+                        <ul class="divide-y divide-emerald-100 dark:divide-emerald-900">
+                            ${matches.map((match) => match.product ? `
+                                <li>
+                                    <label class="flex cursor-pointer items-center gap-3 py-2">
+                                        <input type="checkbox" checked value="${match.product.id}" data-price="${match.product.current_price}" class="size-4 accent-emerald-600">
+                                        <span class="min-w-0 flex-1">
+                                            <span class="block truncate">${escapeHtml(match.product.title)}</span>
+                                            <span class="block text-xs text-neutral-500">${escapeHtml(match.ingredient)} · ${escapeHtml(match.product.store)}</span>
+                                        </span>
+                                        <span class="font-medium">${formatPrice(match.product.current_price)}</span>
+                                    </label>
+                                </li>
+                            ` : `
+                                <li class="flex items-center gap-3 py-2 text-neutral-400">
+                                    <span class="size-4"></span>
+                                    <span class="flex-1">${escapeHtml(match.ingredient)}</span>
+                                    <span class="text-xs">nav atrasts</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                            <span>Kopā: <strong data-total></strong></span>
+                            <button type="button" data-add-to-list class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">Pievienot sarakstam</button>
+                        </div>
+                        <p data-add-result class="mt-2 hidden text-sm"></p>
+                    `;
+                    updateMatchTotal(container);
+                } catch (error) {
+                    container.textContent = 'Produktus neizdevās atrast.';
+                }
+            }
+
+            function updateMatchTotal(container) {
+                const checked = [...container.querySelectorAll('input[type=checkbox]:checked')];
+                const total = checked.reduce((sum, input) => sum + Number(input.dataset.price), 0);
+                container.querySelector('[data-total]').textContent = formatPrice(total);
+                container.querySelector('[data-add-to-list]').disabled = !checked.length;
+            }
+
+            details.addEventListener('change', (event) => {
+                if (event.target.matches('#recipe-shopping input[type=checkbox]')) {
+                    updateMatchTotal(document.getElementById('recipe-shopping'));
+                }
+            });
+
+            details.addEventListener('click', async (event) => {
                 if (event.target.dataset.close !== undefined) dialog.close();
+
+                const addButton = event.target.closest('[data-add-to-list]');
+                if (!addButton) return;
+
+                const container = document.getElementById('recipe-shopping');
+                const result = container.querySelector('[data-add-result]');
+                const productIds = [...new Set([...container.querySelectorAll('input[type=checkbox]:checked')].map((input) => Number(input.value)))];
+                addButton.disabled = true;
+                try {
+                    const response = await postJson(@json(route('cart.items.store-many')), { product_ids: productIds });
+                    result.innerHTML = `<span class="text-emerald-700 dark:text-emerald-400">${escapeHtml(response.message)}.</span> <a href="${escapeHtml(response.url)}" class="font-medium underline">Atvērt sarakstu</a>`;
+                } catch (error) {
+                    result.innerHTML = '<span class="text-red-600">Neizdevās pievienot produktus.</span>';
+                    addButton.disabled = false;
+                }
+                result.classList.remove('hidden');
             });
         })();
     </script>
