@@ -8,32 +8,87 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * "Nakts citrons" theme: the grey scales (zinc, neutral, stone) are remapped to a
+ * night-plum scale and emerald to a citrus-orange scale, so existing utility
+ * classes and Flux components pick up the palette without per-view changes.
+ * green / red stay semantic (price down / price up).
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Sora', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f5f5f5;
-    --color-zinc-200: #e5e5e5;
-    --color-zinc-300: #d4d4d4;
-    --color-zinc-400: #a3a3a3;
-    --color-zinc-500: #737373;
-    --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
-    --color-zinc-950: #0a0a0a;
+    --color-zinc-50: #f8f5fb;
+    --color-zinc-100: #efeaf5;
+    --color-zinc-200: #ddd4e8;
+    --color-zinc-300: #c1b6cf;
+    --color-zinc-400: #a497b5;
+    --color-zinc-500: #857899;
+    --color-zinc-600: #5a4b6c;
+    --color-zinc-700: #3a2f48;
+    --color-zinc-800: #261e31;
+    --color-zinc-900: #1d1726;
+    --color-zinc-950: #17121f;
 
-    --color-accent: var(--color-emerald-600);
-    --color-accent-content: var(--color-emerald-600);
-    --color-accent-foreground: var(--color-white);
+    --color-neutral-50: #f8f5fb;
+    --color-neutral-100: #efeaf5;
+    --color-neutral-200: #ddd4e8;
+    --color-neutral-300: #c1b6cf;
+    --color-neutral-400: #a497b5;
+    --color-neutral-500: #857899;
+    --color-neutral-600: #5a4b6c;
+    --color-neutral-700: #3a2f48;
+    --color-neutral-800: #261e31;
+    --color-neutral-900: #1d1726;
+    --color-neutral-950: #17121f;
+
+    --color-stone-50: #f8f5fb;
+    --color-stone-100: #efeaf5;
+    --color-stone-200: #ddd4e8;
+    --color-stone-300: #c1b6cf;
+    --color-stone-400: #a497b5;
+    --color-stone-500: #857899;
+    --color-stone-600: #5a4b6c;
+    --color-stone-700: #3a2f48;
+    --color-stone-800: #261e31;
+    --color-stone-900: #1d1726;
+    --color-stone-950: #17121f;
+
+    --color-emerald-50: #fff7ea;
+    --color-emerald-100: #ffecc9;
+    --color-emerald-200: #ffd99a;
+    --color-emerald-300: #ffc46b;
+    --color-emerald-400: #ffb13b;
+    --color-emerald-500: #ff9f45;
+    --color-emerald-600: #ff8a3d;
+    --color-emerald-700: #ff7a3d;
+    --color-emerald-800: #c2410c;
+    --color-emerald-900: #5a2410;
+    --color-emerald-950: #2e1a1c;
+
+    --color-green-400: #7ee0a8;
+    --color-green-500: #7ee0a8;
+    --color-green-600: #7ee0a8;
+    --color-red-400: #ff8a80;
+
+    --color-ink: #1b1024;
+    --color-plum: #3b1a4a;
+
+    --color-accent: #ffb13b;
+    --color-accent-content: #ffb13b;
+    --color-accent-foreground: #1b1024;
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-emerald-500);
-        --color-accent-content: var(--color-emerald-400);
-        --color-accent-foreground: var(--color-white);
+        --color-accent: #ffb13b;
+        --color-accent-content: #ffb13b;
+        --color-accent-foreground: #1b1024;
     }
+}
+
+body {
+    font-family: var(--font-sans);
 }
 
 @layer base {
@@ -58,9 +113,56 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+    @apply outline-hidden border-emerald-500 ring-4 ring-emerald-500/20 ring-offset-0;
 }
 
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Active sidebar item: orange bar on the left, as in the mockup */
+[data-flux-sidebar-item][data-current] {
+    box-shadow: inset 3px 0 0 var(--color-emerald-400);
+}
+
+/* Auth pages */
+.auth-citrus {
+    background: #0f0c14;
+    color: var(--color-zinc-100);
+}
+
+.auth-citrus [data-flux-heading] {
+    @apply text-2xl font-bold text-zinc-100;
+}
+
+.auth-citrus [data-flux-subheading] {
+    @apply mt-1 text-sm text-zinc-400;
+}
+
+.auth-citrus [data-flux-label] {
+    @apply font-medium text-zinc-100;
+}
+
+.auth-citrus input[data-flux-control] {
+    @apply h-12 rounded-xl border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-500;
+}
+
+.auth-citrus [data-flux-button][type='submit'] {
+    @apply h-12 rounded-xl border-0 bg-linear-to-r from-emerald-400 to-emerald-700 font-semibold text-ink transition hover:brightness-110;
+}
+
+.auth-citrus [data-flux-link] {
+    @apply font-semibold text-emerald-400 underline decoration-emerald-400/60 underline-offset-2;
+}
+
+.auth-citrus .citrus-slice {
+    animation: citrus-spin 60s linear infinite;
+}
+
+@keyframes citrus-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-citrus .citrus-slice { animation: none; }
+}

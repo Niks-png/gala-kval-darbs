@@ -1,14 +1,20 @@
 @props(['product'])
 
 @php
-    $previousPrice = $product->latestPriceHistory?->previous_price;
-    $showPreviousPrice = $previousPrice !== null
-        && $product->current_price !== null
-        && (float) $previousPrice > (float) $product->current_price;
+    $euro = fn ($value) => lv_number($value).' €';
+
+    $points = $product->pricePoints();
+    $dropPercent = $product->latestDropPercent();
+    $previousPrice = $dropPercent !== null ? $product->priceHistory->sortBy('created_at')->last()->previous_price : null;
+    $isLowest = $product->isLowestPriceInDays(30);
+
+    $trend = count($points) > 1 && end($points) !== $points[count($points) - 2]
+        ? (end($points) < $points[count($points) - 2] ? 'down' : 'up')
+        : 'flat';
 @endphp
 
-<article class="flex flex-col overflow-hidden rounded-xl border border-neutral-200 shadow-sm transition hover:border-emerald-500 hover:shadow-md dark:border-neutral-700">
-    <a href="{{ route('products.show', $product) }}" wire:navigate class="block flex-1">
+<article class="flex flex-col overflow-hidden rounded-xl border border-neutral-200 shadow-sm transition hover:border-emerald-700 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900">
+    <a href="{{ route('products.show', $product) }}" wire:navigate class="flex flex-1 flex-col">
         <div class="flex h-32 items-center justify-center bg-neutral-50 dark:bg-neutral-800">
             @if ($product->image_url)
                 <img src="{{ $product->image_url }}" alt="" class="h-full w-full object-contain p-2" loading="lazy">
@@ -16,22 +22,41 @@
                 <flux:icon.photo class="size-8 text-neutral-300 dark:text-neutral-600" />
             @endif
         </div>
-        <div class="p-4">
+
+        <div class="flex flex-1 flex-col p-4">
             <flux:heading size="sm">{{ $product->title }}</flux:heading>
             <flux:text class="mt-1">{{ $product->store }}</flux:text>
-            <div class="mt-4 flex items-baseline justify-between gap-3">
-                <flux:heading size="lg">
-                    {{ $product->current_price !== null ? number_format((float) $product->current_price, 2) . ' €' : '—' }}
-                </flux:heading>
-                @if ($showPreviousPrice)
-                    <flux:text class="text-neutral-500 line-through">{{ number_format((float) $previousPrice, 2) }} €</flux:text>
+
+            <div class="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span class="text-2xl font-bold tabular-nums text-zinc-100">
+                    {{ $product->current_price !== null ? $euro($product->current_price) : '—' }}
+                </span>
+                @if ($previousPrice !== null)
+                    <span class="font-mono text-sm tabular-nums text-zinc-500 line-through">{{ lv_number((float) $previousPrice, 2) }}</span>
+                    <span class="self-center rounded-full bg-green-400/15 px-2 py-0.5 font-mono text-xs font-semibold text-green-400">−{{ $dropPercent }}%</span>
                 @endif
-                @if ($product->unit_price !== null && $product->unit !== null)
-                    <flux:text>{{ number_format((float) $product->unit_price, 2) }} {{ $product->unit }}</flux:text>
-                @endif
+            </div>
+
+            @if (($product->unit_price !== null && $product->unit !== null) || $isLowest)
+                <p class="mt-1 font-mono text-xs tabular-nums text-zinc-400">
+                    @if ($product->unit_price !== null && $product->unit !== null)
+                        {{ lv_number((float) $product->unit_price, 2) }} {{ $product->unit }}
+                    @endif
+                    @if ($product->unit_price !== null && $product->unit !== null && $isLowest)
+                        <span aria-hidden="true">·</span>
+                    @endif
+                    @if ($isLowest)
+                        <span class="text-green-400">{{ __('30 d. zemākā') }}</span>
+                    @endif
+                </p>
+            @endif
+
+            <div class="mt-auto pt-4">
+                <x-price-sparkline :points="$points" :trend="$trend" area class="h-12 w-full overflow-visible" />
             </div>
         </div>
     </a>
+
     <div class="flex items-center justify-between gap-3 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700">
         <a href="{{ route('products.show', $product) }}" wire:navigate class="text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">{{ __('Sīkāk') }}</a>
         <form method="POST" action="{{ route('cart.items.store', $product) }}" class="add-to-cart-form">

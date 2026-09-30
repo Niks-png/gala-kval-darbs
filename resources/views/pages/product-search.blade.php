@@ -46,7 +46,7 @@
                 </select>
             </div>
             <div class="flex gap-2">
-                <button type="submit" class="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
+                <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-5 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
                     {{ __('Meklēt') }}
                 </button>
                 @if ($products !== null)

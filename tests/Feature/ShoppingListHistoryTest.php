@@ -79,8 +79,8 @@ test('the lists page shows finished lists and monthly spending', function () {
         ->get(route('cart'))
         ->assertOk()
         ->assertSee('Iepirkumu vēsture')
-        ->assertSeeInOrder(['Iztērēts šomēnes', '5.00 €'])
-        ->assertSee('Pēdējos 6 mēnešos kopā: 17.40 €')
+        ->assertSeeInOrder(['Iztērēts šomēnes', '5,00 €'])
+        ->assertSee('Pēdējos 6 mēnešos kopā: 17,40 €')
         ->assertSeeInOrder(['Nedēļas iepirkumi', 'Augusta iepirkumi']);
 
     Carbon::setTestNow();

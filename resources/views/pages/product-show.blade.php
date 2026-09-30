@@ -44,17 +44,36 @@
                 </div>
 
                 <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <span class="text-3xl font-semibold">{{ $price !== null ? number_format($price, 2) . ' €' : '—' }}</span>
+                    <span class="text-3xl font-semibold">{{ $price !== null ? lv_number($price, 2) . ' €' : '—' }}</span>
                     @if ($latest && $price !== null && (float) $latest->previous_price > $price)
-                        <span class="text-lg text-neutral-500 line-through">{{ number_format((float) $latest->previous_price, 2) }} €</span>
+                        <span class="text-lg text-neutral-500 line-through">{{ lv_number((float) $latest->previous_price, 2) }} €</span>
                     @endif
                     @if ($product->unit_price !== null && $product->unit !== null)
-                        <flux:text>{{ number_format((float) $product->unit_price, 2) }} {{ $product->unit }}</flux:text>
+                        <flux:text>{{ lv_number((float) $product->unit_price, 2) }} {{ $product->unit }}</flux:text>
                     @endif
                 </div>
                 @if ($product->original_price)
                     <flux:text>{{ __('Parastā cena: :price', ['price' => $product->original_price]) }}</flux:text>
                 @endif
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <form method="POST" action="{{ route($isWatching ? 'products.unwatch' : 'products.watch', $product) }}">
+                        @csrf
+                        @if ($isWatching)
+                            @method('DELETE')
+                            <flux:button type="submit" size="sm" icon="bell-alert" data-test="unwatch-button" aria-pressed="true">
+                                {{ __('Seko cenai') }}
+                            </flux:button>
+                        @else
+                            <flux:button type="submit" size="sm" icon="bell" data-test="watch-button" aria-pressed="false">
+                                {{ __('Sekot cenai') }}
+                            </flux:button>
+                        @endif
+                    </form>
+                    <flux:text class="text-sm">
+                        {{ session('watch_status') ?? ($isWatching ? __('Paziņosim, kad cena kritīsies. Spied vēlreiz, lai pārtrauktu.') : __('Saņem paziņojumu, kad cena kritīsies.')) }}
+                    </flux:text>
+                </div>
 
                 <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
                     @if ($lists->isEmpty())
@@ -103,15 +122,15 @@
                                 <p class="line-clamp-2 text-sm font-medium">{{ $similar->title }}</p>
                                 <p class="mt-1 text-xs text-neutral-500">{{ $similar->store }}</p>
                                 <p class="mt-1 flex flex-wrap items-baseline gap-x-2 text-sm">
-                                    <span class="font-semibold">{{ number_format((float) $similar->current_price, 2) }} €</span>
+                                    <span class="font-semibold">{{ lv_number((float) $similar->current_price, 2) }} €</span>
                                     @if ($similar->unit_price !== null && $similar->unit !== null)
-                                        <span class="text-xs text-neutral-500">{{ number_format((float) $similar->unit_price, 2) }} {{ $similar->unit }}</span>
+                                        <span class="text-xs text-neutral-500">{{ lv_number((float) $similar->unit_price, 2) }} {{ $similar->unit }}</span>
                                     @endif
                                     @if ($difference !== null && abs($difference) >= 0.01)
-                                        <span class="text-xs font-medium {{ $difference < 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                                        <span class="text-xs font-medium {{ $difference < 0 ? 'text-green-400' : 'text-red-400' }}">
                                             {{ $difference < 0
-                                                ? __(':amount € lētāk', ['amount' => number_format(abs($difference), 2)])
-                                                : __(':amount € dārgāk', ['amount' => number_format($difference, 2)]) }}
+                                                ? __(':amount € lētāk', ['amount' => lv_number(abs($difference), 2)])
+                                                : __(':amount € dārgāk', ['amount' => lv_number($difference, 2)]) }}
                                         </span>
                                     @endif
                                 </p>
@@ -151,10 +170,10 @@
                                 @php($changeAmount = (float) $change->new_price - (float) $change->previous_price)
                                 <tr>
                                     <td class="px-3 py-2">{{ $change->created_at->format('d.m.Y H:i') }}</td>
-                                    <td class="px-3 py-2">{{ number_format((float) $change->previous_price, 2) }} €</td>
-                                    <td class="px-3 py-2 font-medium">{{ number_format((float) $change->new_price, 2) }} €</td>
-                                    <td class="px-3 py-2 {{ $changeAmount < 0 ? 'text-emerald-600' : ($changeAmount > 0 ? 'text-red-600' : 'text-neutral-500') }}">
-                                        {{ $changeAmount == 0 ? __('Bez izmaiņām') : ($changeAmount > 0 ? '+' : '') . number_format($changeAmount, 2) . ' €' }}
+                                    <td class="px-3 py-2">{{ lv_number((float) $change->previous_price, 2) }} €</td>
+                                    <td class="px-3 py-2 font-medium">{{ lv_number((float) $change->new_price, 2) }} €</td>
+                                    <td class="px-3 py-2 {{ $changeAmount < 0 ? 'text-green-400' : ($changeAmount > 0 ? 'text-red-400' : 'text-neutral-500') }}">
+                                        {{ $changeAmount == 0 ? __('Bez izmaiņām') : ($changeAmount > 0 ? '+' : '') . lv_number($changeAmount, 2) . ' €' }}
                                     </td>
                                 </tr>
                             @endforeach

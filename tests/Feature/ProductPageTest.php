@@ -31,9 +31,9 @@ test('the product page shows price history and the same product in another store
         ->get(route('products.show', $milk))
         ->assertOk()
         ->assertSee('PIENS OPĀ 2.5% 1L')
-        ->assertSee('1.19 €')
+        ->assertSee('1,19 €')
         ->assertSee(route('products.show', $similar))
-        ->assertSee('0.10 € lētāk')
+        ->assertSee('0,10 € lētāk')
         ->assertDontSee('SIERS HOLANDES')
         ->assertDontSee('Piens mājas');
 });

@@ -21,7 +21,7 @@ class ProductController extends Controller
             ...$filters,
             ...$this->filterOptions(),
             'products' => $this->filteredQuery($filters)
-                ->with('latestPriceHistory')
+                ->with('priceHistory')
                 ->orderBy('title')
                 ->paginate(30)
                 ->withQueryString(),
@@ -44,7 +44,7 @@ class ProductController extends Controller
             ...$this->filterOptions(),
             'products' => $hasFilters
                 ? $this->filteredQuery($filters)
-                    ->with('latestPriceHistory')
+                    ->with('priceHistory')
                     ->orderBy('title')
                     ->paginate(30)
                     ->withQueryString()
@@ -83,6 +83,7 @@ class ProductController extends Controller
                 ->orderBy('name')
                 ->get(),
             'activeListId' => (int) $request->session()->get('active_shopping_list_id'),
+            'isWatching' => $request->user()->isWatching($product),
         ]);
     }
 

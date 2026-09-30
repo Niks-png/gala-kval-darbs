@@ -1,10 +1,10 @@
-@php($pendingInvitations = auth()->user()->shoppingListInvitations()->count())
+@php($notificationCount = auth()->user()->shoppingListInvitations()->count() + auth()->user()->unreadNotifications()->count())
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
+    <body class="min-h-screen bg-white dark:bg-zinc-950">
         <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate class="in-data-flux-sidebar-collapsed-desktop:hidden" />
@@ -27,7 +27,7 @@
                 <flux:sidebar.item icon="chart-bar" :href="route('price-history')" :current="request()->routeIs('price-history')" wire:navigate>
                     {{ __('Cenu vēsture') }}
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="bell" :href="route('notifications')" :current="request()->routeIs('notifications')" :badge="$pendingInvitations ?: null" wire:navigate>
+                <flux:sidebar.item icon="bell" :href="route('notifications')" :current="request()->routeIs('notifications')" :badge="$notificationCount ?: null" wire:navigate>
                     {{ __('Paziņojumi') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>
@@ -63,7 +63,7 @@
                     :href="route('notifications')"
                     :current="request()->routeIs('notifications')"
                     :label="__('Paziņojumi')"
-                    :badge="$pendingInvitations ?: null"
+                    :badge="$notificationCount ?: null"
                     badge:color="red"
                     wire:navigate
                 />
@@ -88,7 +88,7 @@
                     icon="bell"
                     :href="route('notifications')"
                     :label="__('Paziņojumi')"
-                    :badge="$pendingInvitations ?: null"
+                    :badge="$notificationCount ?: null"
                     badge:color="red"
                     wire:navigate
                 />

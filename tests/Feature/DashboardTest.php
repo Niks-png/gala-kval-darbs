@@ -17,6 +17,39 @@ test('authenticated users can visit the dashboard', function () {
     $response->assertOk();
 });
 
+test('product cards show the price drop, 30 day low and sparkline', function () {
+    $user = User::factory()->create();
+    $product = Product::query()->create([
+        'title' => 'Piens Rasa',
+        'store' => 'Rimi',
+        'current_price' => 1.19,
+        'unit_price' => 1.19,
+        'unit' => '€/l',
+    ]);
+    ProductPriceHistory::query()->create(['product_id' => $product->id, 'previous_price' => 1.29, 'new_price' => 1.39]);
+    ProductPriceHistory::query()->create(['product_id' => $product->id, 'previous_price' => 1.39, 'new_price' => 1.19]);
+
+    $this->actingAs($user)->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('1,19 €')
+        ->assertSee('1,39')
+        ->assertSee('−14%')
+        ->assertSee('30 d. zemākā')
+        ->assertSee('<polyline', false);
+});
+
+test('product cards without a price drop show no discount', function () {
+    $user = User::factory()->create();
+    $product = Product::query()->create(['title' => 'Maize', 'store' => 'Rimi', 'current_price' => 1.49]);
+    ProductPriceHistory::query()->create(['product_id' => $product->id, 'previous_price' => 1.29, 'new_price' => 1.49]);
+
+    $this->actingAs($user)->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('1,49 €')
+        ->assertDontSee('30 d. zemākā')
+        ->assertDontSee('%</span>', false);
+});
+
 test('authenticated users can visit the cart', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
@@ -43,8 +76,8 @@ test('authenticated users can view price history', function () {
 
     $response->assertOk()
         ->assertSee('Fresh Milk')
-        ->assertSee('1.99')
-        ->assertSee('1.49');
+        ->assertSee('1,99')
+        ->assertSee('1,49');
 });
 
 test('price history does not flag an unchanged snapshot as a price change', function () {

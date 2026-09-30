@@ -56,7 +56,7 @@ class ShoppingListController extends Controller
         }
 
         return to_route('cart.show', $shoppingList)
-            ->with('success', __('Iepirkšanās pabeigta. Iztērēti :total €', ['total' => number_format((float) $shoppingList->completed_total, 2)]));
+            ->with('success', __('Iepirkšanās pabeigta. Iztērēti :total €', ['total' => lv_number((float) $shoppingList->completed_total, 2)]));
     }
 
     public function reopen(ShoppingList $shoppingList): RedirectResponse

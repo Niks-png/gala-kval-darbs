@@ -32,6 +32,8 @@
                 viewable
             />
 
+            <x-password-requirements />
+
             <!-- Confirm Password -->
             <flux:input
                 name="password_confirmation"

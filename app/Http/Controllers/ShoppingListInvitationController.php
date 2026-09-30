@@ -5,22 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\ShoppingListInvitation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class ShoppingListInvitationController extends Controller
 {
-    public function index(Request $request): View
-    {
-        $invitations = $request->user()->shoppingListInvitations()
-            ->with(['shoppingList.user', 'inviter'])
-            ->latest()
-            ->get();
-
-        return view('pages.notifications', [
-            'invitations' => $invitations,
-        ]);
-    }
-
     public function accept(Request $request, ShoppingListInvitation $invitation): RedirectResponse
     {
         abort_unless($invitation->user_id === $request->user()->id, 403);

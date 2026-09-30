@@ -1,15 +1,15 @@
 <x-layouts::app :title="__('Dashboard')">
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div class="grid gap-4 md:grid-cols-3">
-            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
+            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 <flux:text>{{ __('Produkti') }}</flux:text>
                 <flux:heading size="xl">{{ $productCount }}</flux:heading>
             </div>
-            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
+            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 <flux:text>{{ __('Veikali') }}</flux:text>
                 <flux:heading size="xl">{{ $storeCount }}</flux:heading>
             </div>
-            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700">
+            <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 dark:bg-[radial-gradient(140%_120%_at_100%_0%,rgba(255,122,61,.35),transparent_60%)]">
                 <flux:text>{{ __('Cenu kritumi (7 dienas)') }}</flux:text>
                 <flux:heading size="xl" class="text-emerald-600 dark:text-emerald-400">{{ $recentPriceDrops }}</flux:heading>
             </div>

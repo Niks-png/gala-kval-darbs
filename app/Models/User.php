@@ -57,6 +57,19 @@ class User extends Authenticatable
         return $this->hasMany(ShoppingListInvitation::class);
     }
 
+    /**
+     * Products the user follows for price-drop alerts.
+     */
+    public function watchedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_watches')->withTimestamps();
+    }
+
+    public function isWatching(Product $product): bool
+    {
+        return $this->watchedProducts()->whereKey($product->id)->exists();
+    }
+
     public function sharedShoppingLists(): BelongsToMany
     {
         return $this->belongsToMany(ShoppingList::class)
