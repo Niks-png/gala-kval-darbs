@@ -38,6 +38,34 @@ test('users can follow and unfollow a product from its page', function () {
     expect($user->fresh()->isWatching($product))->toBeFalse();
 });
 
+test('product cards show a follow bell reflecting the current state', function () {
+    $user = User::factory()->create();
+    $followed = Product::query()->create(['title' => 'Piens', 'store' => 'Rimi', 'current_price' => 1.39]);
+    Product::query()->create(['title' => 'Maize', 'store' => 'Rimi', 'current_price' => 0.99]);
+    $user->watchedProducts()->attach($followed);
+
+    $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+
+    expect(substr_count($html, 'data-test="card-watch-button"'))->toBe(2)
+        ->and(substr_count($html, 'aria-pressed="true"'))->toBe(1)
+        ->and($html)->toContain('value="DELETE"');
+});
+
+test('the card bell toggles over JSON without a redirect', function () {
+    $user = User::factory()->create();
+    $product = Product::query()->create(['title' => 'Piens', 'store' => 'Rimi', 'current_price' => 1.39]);
+
+    $this->actingAs($user)->postJson(route('products.watch', $product))
+        ->assertOk()
+        ->assertJson(['watching' => true]);
+    expect($user->isWatching($product))->toBeTrue();
+
+    $this->deleteJson(route('products.unwatch', $product))
+        ->assertOk()
+        ->assertJson(['watching' => false]);
+    expect($user->isWatching($product))->toBeFalse();
+});
+
 test('guests cannot follow products', function () {
     $product = Product::query()->create(['title' => 'Piens', 'store' => 'Rimi', 'current_price' => 1.39]);
 

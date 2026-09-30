@@ -31,6 +31,7 @@ class ProductController extends Controller
                 ->whereColumn('new_price', '<', 'previous_price')
                 ->where('created_at', '>=', now()->subWeek())
                 ->count(),
+            'watchedIds' => $this->watchedIds($request),
         ]);
     }
 
@@ -49,7 +50,18 @@ class ProductController extends Controller
                     ->paginate(30)
                     ->withQueryString()
                 : null,
+            'watchedIds' => $this->watchedIds($request),
         ]);
+    }
+
+    /**
+     * IDs of products the user follows, for the bell on product cards.
+     *
+     * @return Collection<int, int>
+     */
+    private function watchedIds(Request $request): Collection
+    {
+        return $request->user()->watchedProducts()->pluck('products.id');
     }
 
     public function priceHistory(Request $request): View

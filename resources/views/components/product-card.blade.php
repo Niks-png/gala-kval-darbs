@@ -1,4 +1,4 @@
-@props(['product'])
+@props(['product', 'watched' => false])
 
 @php
     $euro = fn ($value) => lv_number($value).' €';
@@ -59,12 +59,29 @@
 
     <div class="flex items-center justify-between gap-3 border-t border-neutral-200 px-4 py-2 dark:border-neutral-700">
         <a href="{{ route('products.show', $product) }}" wire:navigate class="text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">{{ __('Sīkāk') }}</a>
-        <form method="POST" action="{{ route('cart.items.store', $product) }}" class="add-to-cart-form">
-            @csrf
-            <button type="submit" class="flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950">
-                <flux:icon.plus variant="micro" />
-                {{ __('Pievienot sarakstam') }}
-            </button>
-        </form>
+        <div class="flex items-center gap-1">
+            {{-- Follow toggle; resources/js/app.js submits it without a reload --}}
+            <form method="POST" action="{{ route('products.watch', $product) }}" class="watch-form group" @if ($watched) data-watching @endif
+                data-label-watch="{{ __('Sekot cenai') }}" data-label-unwatch="{{ __('Pārtraukt sekot cenai') }}">
+                @csrf
+                <input type="hidden" name="_method" value="{{ $watched ? 'DELETE' : 'POST' }}">
+                <button type="submit"
+                    class="flex size-8 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-emerald-950 hover:text-emerald-400 group-data-watching:text-emerald-400"
+                    aria-pressed="{{ $watched ? 'true' : 'false' }}"
+                    aria-label="{{ $watched ? __('Pārtraukt sekot cenai') : __('Sekot cenai') }}"
+                    title="{{ $watched ? __('Pārtraukt sekot cenai') : __('Sekot cenai') }}"
+                    data-test="card-watch-button">
+                    <flux:icon.bell variant="mini" class="size-4 group-data-watching:hidden" />
+                    <flux:icon.bell-alert variant="mini" class="hidden size-4 group-data-watching:block" />
+                </button>
+            </form>
+            <form method="POST" action="{{ route('cart.items.store', $product) }}" class="add-to-cart-form">
+                @csrf
+                <button type="submit" class="flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950">
+                    <flux:icon.plus variant="micro" />
+                    {{ __('Pievienot sarakstam') }}
+                </button>
+            </form>
+        </div>
     </div>
 </article>

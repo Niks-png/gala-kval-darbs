@@ -28,6 +28,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'scraper' => [
+        // Python interpreter that runs public/*_scraper.py (e.g. "py", "python3" or a full path)
+        'python' => env('SCRAPER_PYTHON', 'python'),
+        // Local time of the daily scrape + import
+        'daily_at' => env('SCRAPER_DAILY_AT', '06:00'),
+        'timeout' => (int) env('SCRAPER_TIMEOUT', 1800),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
