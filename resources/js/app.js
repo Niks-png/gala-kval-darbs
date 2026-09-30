@@ -60,3 +60,66 @@ function initStoreMap() {
 }
 
 document.addEventListener('livewire:navigated', initStoreMap);
+
+// Live password requirement checklist (resources/views/components/password-requirements.blade.php).
+// Patterns mirror Illuminate\Validation\Rules\Password.
+const passwordChecks = {
+    lower: (value) => /\p{Ll}/u.test(value),
+    upper: (value) => /\p{Lu}/u.test(value),
+    letters: (value) => /\p{L}/u.test(value),
+    numbers: (value) => /\p{N}/u.test(value),
+    symbols: (value) => /\p{Z}|\p{S}|\p{P}/u.test(value),
+};
+
+function updatePasswordRequirements(form) {
+    const [password, confirmation] = form.querySelectorAll('input[autocomplete="new-password"]');
+
+    if (!password) {
+        return;
+    }
+
+    form.querySelectorAll('[data-password-requirements]').forEach((list) => {
+        const min = Number(list.dataset.min);
+
+        list.querySelectorAll('[data-rule]').forEach((item) => {
+            const rule = item.dataset.rule;
+            let met;
+
+            if (rule === 'min') {
+                met = [...password.value].length >= min;
+            } else if (rule === 'match') {
+                met = password.value !== '' && password.value === confirmation?.value;
+            } else {
+                met = passwordChecks[rule]?.(password.value) ?? false;
+            }
+
+            item.toggleAttribute('data-met', met);
+        });
+    });
+}
+
+function updateAllPasswordRequirements() {
+    document.querySelectorAll('[data-password-requirements]').forEach((list) => {
+        const form = list.closest('form');
+
+        if (form) {
+            updatePasswordRequirements(form);
+        }
+    });
+}
+
+document.addEventListener('input', (event) => {
+    if (event.target.matches?.('input[autocomplete="new-password"]') && event.target.form) {
+        updatePasswordRequirements(event.target.form);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', updateAllPasswordRequirements);
+document.addEventListener('livewire:navigated', updateAllPasswordRequirements);
+
+// Livewire forms reset their inputs after saving without firing "input".
+document.addEventListener('livewire:init', () => {
+    window.Livewire.hook('commit', ({ succeed }) => {
+        succeed(() => queueMicrotask(updateAllPasswordRequirements));
+    });
+});

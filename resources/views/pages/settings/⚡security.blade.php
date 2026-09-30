@@ -79,7 +79,8 @@ new #[Title('Drošības iestatījumi')] class extends Component {
                 passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
                 viewable
             />
-            <flux:input
+
+            <x-password-requirements />            <flux:input
                 wire:model="password_confirmation"
                 :label="__('Confirm password')"
                 type="password"
