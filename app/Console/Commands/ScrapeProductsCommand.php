@@ -43,20 +43,21 @@ class ScrapeProductsCommand extends Command
         foreach ($stores as $store) {
             $this->info("Scraping {$store}...");
 
+            // Stream the scraper's progress as it runs so a long scrape doesn't look frozen.
             $result = Process::path(base_path())
                 ->timeout(config('services.scraper.timeout'))
-                ->env(['PYTHONIOENCODING' => 'utf-8'])
-                ->run([config('services.scraper.python'), base_path(self::SCRAPERS[$store])]);
+                ->env(['PYTHONIOENCODING' => 'utf-8', 'PYTHONUNBUFFERED' => '1'])
+                ->run(
+                    [config('services.scraper.python'), base_path(self::SCRAPERS[$store])],
+                    fn (string $type, string $output) => $this->output->write($output),
+                );
 
             if ($result->successful()) {
-                $this->line(trim($result->output()));
-
                 continue;
             }
 
             $failed[] = $store;
             $this->error("Scraping {$store} failed (exit code {$result->exitCode()}).");
-            $this->line(trim($result->errorOutput()));
             Log::error("products:scrape failed for {$store}", [
                 'exit_code' => $result->exitCode(),
                 'error' => mb_substr($result->errorOutput(), -2000),

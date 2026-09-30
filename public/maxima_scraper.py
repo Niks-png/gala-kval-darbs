@@ -8,20 +8,19 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.parse import urljoin
 
+import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
 URL = "https://www.maxima.lv/bukleti"
 BASE_URL = "https://www.maxima.lv"
+# The page loads more offers on scroll from this endpoint; calling it directly
+# takes seconds instead of minutes and needs no browser.
+LOAD_MORE_URL = "https://www.maxima.lv/ajax/salesloadmore"
+BATCH_SIZE = 100
+MAX_BATCHES = 50
 STORE = "maxima.lv"
 OUTPUT_FILE = Path(__file__).with_name("maxima_products.csv")
 OFFER_SELECTOR = ".offer-item"
-LOAD_WAIT_SECONDS = 10
-IDLE_SCROLLS_TO_STOP = 3
 # Fewer offers than this means the page did not load properly; keep the previous data instead.
 MIN_PRODUCTS = int(os.environ.get("MAXIMA_MIN_PRODUCTS", "100"))
 
@@ -85,55 +84,39 @@ def extract_product(item) -> dict[str, str]:
     }
 
 
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless=new")
-chrome_options.add_argument("--window-size=1920,1080")
-chrome_options.add_experimental_option(
-    "prefs", {"profile.managed_default_content_settings.images": 2}
-)
+def fetch_batch(session: requests.Session, offset: int) -> list:
+    """One batch of offers from the endpoint the page's infinite scroll uses."""
+    response = session.post(LOAD_MORE_URL, params={"sort_by": "newest", "limit": BATCH_SIZE, "search": ""},
+                            data={"offset": offset}, timeout=60)
+    response.raise_for_status()
 
-def count_offers(browser) -> int:
-    return len(browser.find_elements(By.CSS_SELECTOR, OFFER_SELECTOR))
+    try:
+        html = response.json().get("html", "")
+    except ValueError:
+        html = response.text
 
-
-def scroll_to_bottom(browser) -> None:
-    # Step back up a little first so the infinite-scroll trigger at the bottom fires again.
-    browser.execute_script("window.scrollBy(0, -600);")
-    browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    return BeautifulSoup(html, "html.parser").select(OFFER_SELECTOR)
 
 
-driver = webdriver.Chrome(options=chrome_options)
-try:
-    driver.get(URL)
-    WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, OFFER_SELECTOR)))
+session = requests.Session()
+session.headers.update({"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"})
+session.get(URL, timeout=60).raise_for_status()  # same session/cookies as a browser visit
 
-    # Maxima loads more offers when you scroll to the bottom. Keep scrolling until
-    # several scrolls in a row add nothing, so one slow load does not end the scrape.
-    idle_scrolls = 0
-    while idle_scrolls < IDLE_SCROLLS_TO_STOP:
-        offers_before = count_offers(driver)
-        scroll_to_bottom(driver)
-        try:
-            WebDriverWait(driver, LOAD_WAIT_SECONDS).until(
-                lambda browser: count_offers(browser) > offers_before
-            )
-            idle_scrolls = 0
-        except TimeoutException:
-            idle_scrolls += 1
-            print(f"No new offers after scrolling ({offers_before} loaded, {idle_scrolls}/{IDLE_SCROLLS_TO_STOP})", file=sys.stderr)
+items = []
+for _ in range(MAX_BATCHES):
+    batch = fetch_batch(session, len(items))
+    items.extend(batch)
+    print(f"Fetched {len(items)} Maxima offers...", flush=True)
+    if len(batch) < BATCH_SIZE:
+        break
 
-    page_source = driver.page_source
-finally:
-    driver.quit()
-
-soup = BeautifulSoup(page_source, "html.parser")
-products = [extract_product(item) for item in soup.select(OFFER_SELECTOR)]
+products = [extract_product(item) for item in items]
 
 if len(products) < MIN_PRODUCTS:
     # Exit before touching the CSV or importing, so products:scrape reports the failure.
     sys.exit(
         f"Only {len(products)} Maxima offers loaded (expected at least {MIN_PRODUCTS}); "
-        "the page probably did not finish loading. Nothing saved or imported."
+        "Maxima's site probably changed or failed. Nothing saved or imported."
     )
 
 with OUTPUT_FILE.open("w", newline="", encoding="utf-8") as csvfile:
