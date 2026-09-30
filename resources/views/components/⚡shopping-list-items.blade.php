@@ -93,8 +93,8 @@ new class extends Component {
         <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-neutral-50 px-4 py-3 text-sm dark:bg-neutral-800/60">
             <span>{{ __('Nopirkts :checked no :count', ['checked' => $checkedCount, 'count' => $products->count()]) }}</span>
             <span class="flex flex-wrap gap-4">
-                <span>{{ __('Kopā:') }} <strong>{{ number_format($total, 2) }} €</strong></span>
-                <span>{{ __('Vēl jāpērk:') }} <strong class="text-emerald-600 dark:text-emerald-400">{{ number_format($remaining, 2) }} €</strong></span>
+                <span>{{ __('Kopā:') }} <strong>{{ lv_number($total, 2) }} €</strong></span>
+                <span>{{ __('Vēl jāpērk:') }} <strong class="text-emerald-600 dark:text-emerald-400">{{ lv_number($remaining, 2) }} €</strong></span>
             </span>
             <span class="flex items-center gap-1.5 text-xs text-neutral-500" title="{{ __('Izmaiņas, ko veic citi dalībnieki, parādās automātiski') }}">
                 <span class="size-2 animate-pulse rounded-full bg-emerald-500"></span>
@@ -114,7 +114,7 @@ new class extends Component {
                             <button type="button" wire:click="toggle({{ $product->id }})"
                                 @class([
                                     'flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition',
-                                    'border-emerald-600 bg-emerald-600 text-white' => $checked,
+                                    'border-emerald-400 bg-emerald-400 text-ink' => $checked,
                                     'border-neutral-300 hover:border-emerald-500 dark:border-neutral-600' => ! $checked,
                                 ])
                                 role="checkbox" aria-checked="{{ $checked ? 'true' : 'false' }}"
@@ -145,7 +145,7 @@ new class extends Component {
                             <button type="button" wire:click="increase({{ $product->id }})" class="flex size-8 items-center justify-center rounded-full border border-neutral-300 text-lg transition hover:border-emerald-500 hover:text-emerald-600 dark:border-neutral-600" aria-label="{{ __('Palielināt daudzumu') }}">+</button>
                         @endif
                         <flux:heading size="sm">
-                            {{ $product->current_price !== null ? number_format($lineTotal($product), 2) . ' €' : '—' }}
+                            {{ $product->current_price !== null ? lv_number($lineTotal($product), 2) . ' €' : '—' }}
                         </flux:heading>
                         @if ($this->canEdit)
                             <button type="button" wire:click="remove({{ $product->id }})" class="text-sm text-red-600 transition hover:text-red-700" aria-label="{{ __('Noņemt preci') }}">{{ __('Noņemt') }}</button>

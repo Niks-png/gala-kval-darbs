@@ -3,50 +3,62 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div class="relative hidden h-full flex-col overflow-hidden p-10 text-white lg:flex">
-                <div class="absolute inset-0 bg-linear-to-br from-emerald-900 via-emerald-950 to-neutral-950"></div>
-                <div class="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_35%)]"></div>
+    <body class="auth-citrus min-h-screen antialiased">
+        <div class="flex min-h-dvh items-center justify-center p-4 sm:p-8">
+            <div class="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-zinc-700 bg-zinc-900 shadow-2xl shadow-black/50 lg:grid-cols-2">
+                {{-- Left: brand panel --}}
+                <div class="relative hidden min-h-[560px] flex-col overflow-hidden p-10 text-white lg:flex">
+                    <div class="absolute inset-0 bg-[radial-gradient(120%_90%_at_100%_0%,#ff7a3d_0%,#c2410c_28%,#3b1a4a_62%,#17121f_100%)]"></div>
+                    <div class="absolute inset-0 bg-linear-to-t from-zinc-950/70 via-transparent to-transparent"></div>
 
-                <a href="{{ route('home') }}" class="relative z-20 flex items-center text-lg font-medium" wire:navigate>
-                    <span class="flex h-10 w-10 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="me-2 h-7 fill-current text-white" />
-                    </span>
-                    {{ __('Recepšu un cenu ceļvedis') }}
-                </a>
+                    {{-- Citrus slice --}}
+                    <svg class="citrus-slice pointer-events-none absolute right-6 top-16 size-48 drop-shadow-[0_20px_40px_rgba(0,0,0,0.35)]" viewBox="0 0 200 200" aria-hidden="true">
+                        <circle cx="100" cy="100" r="96" fill="#f6dfb8" />
+                        <circle cx="100" cy="100" r="84" fill="#f7c35f" />
+                        <g stroke="#f3a93a" stroke-width="5" stroke-linecap="round">
+                            @for ($i = 0; $i < 10; $i++)
+                                <line x1="100" y1="100" x2="{{ 100 + 80 * cos(deg2rad($i * 36)) }}" y2="{{ 100 + 80 * sin(deg2rad($i * 36)) }}" />
+                            @endfor
+                        </g>
+                        <circle cx="100" cy="100" r="6" fill="#f3a93a" />
+                    </svg>
 
-                <div class="relative z-20 mt-auto">
-                    <flux:heading size="xl" class="text-white">
-                        {{ __('Atrodi ko pagatavot no tā, kas jau ir tavā virtuvē.') }}
-                    </flux:heading>
-
-                    <ul class="mt-8 space-y-5">
-                        <li class="flex items-start gap-3">
-                            <flux:icon.book-open-text class="mt-0.5 size-5 shrink-0 text-emerald-300" />
-                            <span class="text-sm text-emerald-50">{{ __('Ievadi produktus, kas tev ir mājās, un atrodi piemērotas receptes.') }}</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <flux:icon.chart-bar class="mt-0.5 size-5 shrink-0 text-emerald-300" />
-                            <span class="text-sm text-emerald-50">{{ __('Seko produktu cenu izmaiņām un atrodi izdevīgāko piedāvājumu.') }}</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <flux:icon.map class="mt-0.5 size-5 shrink-0 text-emerald-300" />
-                            <span class="text-sm text-emerald-50">{{ __('Apskati tuvākos Maxima un top! veikalus kartē visā Latvijā.') }}</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="w-full lg:p-8">
-                <div class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                    <a href="{{ route('home') }}" class="z-20 flex flex-col items-center gap-2 font-medium lg:hidden" wire:navigate>
-                        <span class="flex h-9 w-9 items-center justify-center rounded-md">
-                            <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
-                        </span>
-
-                        <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
+                    <a href="{{ route('home') }}" class="relative z-20 flex items-center gap-3 font-semibold" wire:navigate>
+                        <span class="flex size-8 items-center justify-center rounded-lg bg-emerald-300 text-sm font-extrabold text-ink">R</span>
+                        {{ __('Recepšu un cenu ceļvedis') }}
                     </a>
-                    {{ $slot }}
+
+                    <div class="relative z-20 mt-auto">
+                        <h2 class="text-3xl font-extrabold leading-tight tracking-tight">
+                            {{ __('Atrodi ko pagatavot no tā, kas jau ir tavā virtuvē.') }}
+                        </h2>
+
+                        <ul class="mt-6 space-y-4 text-sm text-zinc-200">
+                            <li class="flex items-start gap-3">
+                                <span class="flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-300/20 text-xs text-emerald-300">✦</span>
+                                <span>{{ __('Ievadi produktus, kas tev ir mājās, un atrodi receptes.') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-300/20 text-xs text-emerald-300">↓</span>
+                                <span>{{ __('Seko cenu izmaiņām un atrodi izdevīgāko piedāvājumu.') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-300/20 text-xs text-emerald-300">⧫</span>
+                                <span>{{ __('Apskati tuvākos Maxima un top! veikalus kartē.') }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                {{-- Right: form panel --}}
+                <div class="flex items-center justify-center bg-zinc-900 px-6 py-10 sm:px-12">
+                    <div class="flex w-full max-w-sm flex-col space-y-6">
+                        <a href="{{ route('home') }}" class="flex items-center justify-center gap-3 font-semibold text-white lg:hidden" wire:navigate>
+                            <span class="flex size-8 items-center justify-center rounded-lg bg-emerald-300 text-sm font-extrabold text-ink">R</span>
+                            {{ __('Recepšu un cenu ceļvedis') }}
+                        </a>
+                        {{ $slot }}
+                    </div>
                 </div>
             </div>
         </div>

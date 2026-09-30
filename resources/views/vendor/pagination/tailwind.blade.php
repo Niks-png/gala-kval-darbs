@@ -24,7 +24,7 @@
                 @if (is_array($element))
                     @foreach ($element as $page => $url)
                         @if ($page == $paginator->currentPage())
-                            <span aria-current="page" class="inline-flex min-w-9 items-center justify-center border border-emerald-600 bg-emerald-600 px-3 py-2 text-sm font-medium text-white">{{ $page }}</span>
+                            <span aria-current="page" class="inline-flex min-w-9 items-center justify-center border border-emerald-400 bg-emerald-400 px-3 py-2 text-sm font-medium text-ink">{{ $page }}</span>
                         @else
                             <a href="{{ $url }}" class="{{ $linkClass }} hidden sm:inline-flex" aria-label="{{ __('Lapa :page', ['page' => $page]) }}">{{ $page }}</a>
                         @endif

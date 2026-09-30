@@ -16,7 +16,7 @@
                 <input type="text" name="name" id="name" required placeholder="{{ __('Piem., Nedēļas iepirkumi') }}"
                     class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900" />
             </div>
-            <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
+            <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-4 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
                 {{ __('Izveidot sarakstu') }}
             </button>
         </form>
@@ -43,7 +43,7 @@
                                 @endif
                             </flux:heading>
                             <flux:text class="mt-1">
-                                {{ __(':count preces', ['count' => $itemCount]) }} · {{ number_format($total, 2) }} €
+                                {{ __(':count preces', ['count' => $itemCount]) }} · {{ lv_number($total, 2) }} €
                             </flux:text>
                         </a>
                         <div class="flex items-center gap-2">
@@ -98,7 +98,7 @@
                                 <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">{{ $canEdit ? __('Rediģētājs') : __('Skatītājs') }}</span>
                             </flux:heading>
                             <flux:text class="mt-1">
-                                {{ __('Īpašnieks: :name', ['name' => $list->user->name]) }} · {{ __(':count preces', ['count' => $itemCount]) }} · {{ number_format($total, 2) }} €
+                                {{ __('Īpašnieks: :name', ['name' => $list->user->name]) }} · {{ __(':count preces', ['count' => $itemCount]) }} · {{ lv_number($total, 2) }} €
                             </flux:text>
                         </a>
                         <div class="flex items-center gap-2">
@@ -130,14 +130,14 @@
         <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
             <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
                 <flux:text>{{ __('Iztērēts šomēnes') }}</flux:text>
-                <flux:heading size="xl" class="mt-1">{{ number_format($monthlySpending->last()['total'], 2) }} €</flux:heading>
-                <flux:text class="mt-1 text-xs">{{ __('Pēdējos 6 mēnešos kopā: :total €', ['total' => number_format($monthlySpending->sum('total'), 2)]) }}</flux:text>
+                <flux:heading size="xl" class="mt-1">{{ lv_number($monthlySpending->last()['total'], 2) }} €</flux:heading>
+                <flux:text class="mt-1 text-xs">{{ __('Pēdējos 6 mēnešos kopā: :total €', ['total' => lv_number($monthlySpending->sum('total'), 2)]) }}</flux:text>
             </div>
             <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
                 <div class="flex h-28 items-end gap-3">
                     @foreach ($monthlySpending as $month)
                         <div class="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                            <span class="text-xs text-neutral-500">{{ $month['total'] > 0 ? number_format($month['total'], 0) . ' €' : '' }}</span>
+                            <span class="text-xs text-neutral-500">{{ $month['total'] > 0 ? lv_number($month['total'], 0) . ' €' : '' }}</span>
                             <div class="w-full rounded-t bg-emerald-500 {{ $loop->last ? '' : 'opacity-60' }}" style="height: {{ max(2, $month['total'] / $maxMonthly * 80) }}%"></div>
                         </div>
                     @endforeach
@@ -166,7 +166,7 @@
                                 @endunless
                             </flux:text>
                         </div>
-                        <span class="font-semibold">{{ number_format((float) $list->completed_total, 2) }} €</span>
+                        <span class="font-semibold">{{ lv_number((float) $list->completed_total, 2) }} €</span>
                     </a>
                 @endforeach
             </div>

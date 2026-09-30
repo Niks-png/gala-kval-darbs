@@ -55,9 +55,9 @@ test('editors can change quantities and remove items', function () {
     $this->actingAs($editor);
     $component = Livewire::test('shopping-list-items', ['list' => $list])
         ->call('increase', $product->id)
-        ->assertSee('4.50 €');
+        ->assertSee('4,50 €');
 
-    $component->call('decrease', $product->id)->assertSee('3.00 €');
+    $component->call('decrease', $product->id)->assertSee('3,00 €');
     $component->call('remove', $product->id)->assertSee('Šis saraksts ir tukšs.');
 
     expect($list->products()->count())->toBe(0);

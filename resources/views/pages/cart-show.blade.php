@@ -57,7 +57,7 @@
             @if ($list->isCompleted())
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
                     <flux:text>
-                        {{ __('Iepirkšanās pabeigta :date. Iztērēti :total €.', ['date' => $list->completed_at->format('d.m.Y'), 'total' => number_format((float) $list->completed_total, 2)]) }}
+                        {{ __('Iepirkšanās pabeigta :date. Iztērēti :total €.', ['date' => $list->completed_at->format('d.m.Y'), 'total' => lv_number((float) $list->completed_total, 2)]) }}
                     </flux:text>
                     @if ($canEdit)
                         <form method="POST" action="{{ route('cart.reopen', $list) }}">

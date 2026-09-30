@@ -29,7 +29,7 @@
                     @endforeach
                 </select>
             </div>
-            <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
+            <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-4 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
                 {{ __('Filtrēt') }}
             </button>
         </form>
@@ -65,12 +65,12 @@
 
                             <div class="min-w-32 text-end">
                                 <flux:heading size="sm">
-                                    {{ $product->current_price !== null ? number_format((float) $product->current_price, 2) . ' €' : '—' }}
+                                    {{ $product->current_price !== null ? lv_number((float) $product->current_price, 2) . ' €' : '—' }}
                                 </flux:heading>
                                 @if ($hasChanged)
-                                    <flux:text class="{{ $trend === 'down' ? 'text-emerald-600' : 'text-red-600' }}">
-                                        {{ $changeAmount > 0 ? '+' : '' }}{{ number_format($changePercent, 1) }}%
-                                        ({{ $changeAmount > 0 ? '+' : '' }}{{ number_format($changeAmount, 2) }} €)
+                                    <flux:text class="{{ $trend === 'down' ? 'text-green-400' : 'text-red-400' }}">
+                                        {{ $changeAmount > 0 ? '+' : '' }}{{ lv_number($changePercent, 1) }}%
+                                        ({{ $changeAmount > 0 ? '+' : '' }}{{ lv_number($changeAmount, 2) }} €)
                                     </flux:text>
                                 @else
                                     <flux:text class="text-neutral-500">{{ __('Vēl bez izmaiņām') }}</flux:text>
@@ -97,12 +97,12 @@
                                             $rowDown = $rowChanged && (float) $change->new_price < (float) $change->previous_price;
                                         @endphp
                                         <tr>
-                                            <td class="px-3 py-2">{{ number_format((float) $change->previous_price, 2) }} €</td>
-                                            <td class="px-3 py-2 font-medium {{ $rowChanged ? ($rowDown ? 'text-emerald-600' : 'text-red-600') : '' }}">
-                                                {{ number_format((float) $change->new_price, 2) }} €
+                                            <td class="px-3 py-2">{{ lv_number((float) $change->previous_price, 2) }} €</td>
+                                            <td class="px-3 py-2 font-medium {{ $rowChanged ? ($rowDown ? 'text-green-400' : 'text-red-400') : '' }}">
+                                                {{ lv_number((float) $change->new_price, 2) }} €
                                             </td>
-                                            <td class="px-3 py-2 {{ $rowChanged ? ($rowDown ? 'text-emerald-600' : 'text-red-600') : 'text-neutral-500' }}">
-                                                {{ $rowChanged ? number_format((float) $change->new_price - (float) $change->previous_price, 2) . ' €' : __('Bez izmaiņām') }}
+                                            <td class="px-3 py-2 {{ $rowChanged ? ($rowDown ? 'text-green-400' : 'text-red-400') : 'text-neutral-500' }}">
+                                                {{ $rowChanged ? lv_number((float) $change->new_price - (float) $change->previous_price, 2) . ' €' : __('Bez izmaiņām') }}
                                             </td>
                                             <td class="px-3 py-2">{{ $change->created_at->format('d.m.Y H:i') }}</td>
                                         </tr>
