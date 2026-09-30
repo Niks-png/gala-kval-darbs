@@ -20,10 +20,8 @@ BASE_URL = "https://www.maxima.lv"
 STORE = "maxima.lv"
 OUTPUT_FILE = Path(__file__).with_name("maxima_products.csv")
 OFFER_SELECTOR = ".offer-item"
-LOAD_MORE_SELECTOR = ".lv-load-more .lv-loader"
-BUTTON_WAIT_SECONDS = 10
-LOAD_WAIT_SECONDS = 20
-LOAD_MORE_ATTEMPTS = 3
+LOAD_WAIT_SECONDS = 10
+IDLE_SCROLLS_TO_STOP = 3
 # Fewer offers than this means the page did not load properly; keep the previous data instead.
 MIN_PRODUCTS = int(os.environ.get("MAXIMA_MIN_PRODUCTS", "100"))
 
@@ -98,14 +96,10 @@ def count_offers(browser) -> int:
     return len(browser.find_elements(By.CSS_SELECTOR, OFFER_SELECTOR))
 
 
-def find_load_more(browser, timeout: int):
-    """The button renders after the first offers, so give it time before deciding it is gone."""
-    try:
-        return WebDriverWait(browser, timeout).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, LOAD_MORE_SELECTOR))
-        )
-    except TimeoutException:
-        return None
+def scroll_to_bottom(browser) -> None:
+    # Step back up a little first so the infinite-scroll trigger at the bottom fires again.
+    browser.execute_script("window.scrollBy(0, -600);")
+    browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
 
 driver = webdriver.Chrome(options=chrome_options)
@@ -113,31 +107,20 @@ try:
     driver.get(URL)
     WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, OFFER_SELECTOR)))
 
-    while True:
+    # Maxima loads more offers when you scroll to the bottom. Keep scrolling until
+    # several scrolls in a row add nothing, so one slow load does not end the scrape.
+    idle_scrolls = 0
+    while idle_scrolls < IDLE_SCROLLS_TO_STOP:
         offers_before = count_offers(driver)
-        button = find_load_more(driver, BUTTON_WAIT_SECONDS)
-        if button is None:
-            break
-
-        loaded = False
-        # A slow page load is retried instead of silently ending the scrape.
-        for attempt in range(1, LOAD_MORE_ATTEMPTS + 1):
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
-            driver.execute_script("arguments[0].click();", button)
-            try:
-                WebDriverWait(driver, LOAD_WAIT_SECONDS).until(
-                    lambda browser: count_offers(browser) > offers_before
-                )
-                loaded = True
-                break
-            except TimeoutException:
-                print(f"Load more timed out at {offers_before} offers (attempt {attempt}/{LOAD_MORE_ATTEMPTS})", file=sys.stderr)
-                button = find_load_more(driver, BUTTON_WAIT_SECONDS)
-                if button is None:
-                    break
-
-        if not loaded:
-            break
+        scroll_to_bottom(driver)
+        try:
+            WebDriverWait(driver, LOAD_WAIT_SECONDS).until(
+                lambda browser: count_offers(browser) > offers_before
+            )
+            idle_scrolls = 0
+        except TimeoutException:
+            idle_scrolls += 1
+            print(f"No new offers after scrolling ({offers_before} loaded, {idle_scrolls}/{IDLE_SCROLLS_TO_STOP})", file=sys.stderr)
 
     page_source = driver.page_source
 finally:
