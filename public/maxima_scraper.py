@@ -1,7 +1,9 @@
 import csv
+import os
 import re
 import shutil
 import subprocess
+import sys
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.parse import urljoin
@@ -18,6 +20,12 @@ BASE_URL = "https://www.maxima.lv"
 STORE = "maxima.lv"
 OUTPUT_FILE = Path(__file__).with_name("maxima_products.csv")
 OFFER_SELECTOR = ".offer-item"
+LOAD_MORE_SELECTOR = ".lv-load-more .lv-loader"
+BUTTON_WAIT_SECONDS = 10
+LOAD_WAIT_SECONDS = 20
+LOAD_MORE_ATTEMPTS = 3
+# Fewer offers than this means the page did not load properly; keep the previous data instead.
+MIN_PRODUCTS = int(os.environ.get("MAXIMA_MIN_PRODUCTS", "100"))
 
 
 def parse_price(value: str) -> Decimal | None:
@@ -86,33 +94,64 @@ chrome_options.add_experimental_option(
     "prefs", {"profile.managed_default_content_settings.images": 2}
 )
 
-driver = webdriver.Chrome(options=chrome_options)
-wait = WebDriverWait(driver, 10)
-driver.get(URL)
-wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, OFFER_SELECTOR)))
+def count_offers(browser) -> int:
+    return len(browser.find_elements(By.CSS_SELECTOR, OFFER_SELECTOR))
 
-while True:
-    offers_before = len(driver.find_elements(By.CSS_SELECTOR, OFFER_SELECTOR))
-    buttons = driver.find_elements(By.CSS_SELECTOR, ".lv-load-more .lv-loader")
-    if not buttons:
-        break
 
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", buttons[0])
-    driver.execute_script("arguments[0].click();", buttons[0])
-
+def find_load_more(browser, timeout: int):
+    """The button renders after the first offers, so give it time before deciding it is gone."""
     try:
-        wait.until(
-            lambda browser: len(browser.find_elements(By.CSS_SELECTOR, OFFER_SELECTOR))
-            > offers_before
+        return WebDriverWait(browser, timeout).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, LOAD_MORE_SELECTOR))
         )
     except TimeoutException:
-        break
+        return None
 
-page_source = driver.page_source
-driver.quit()
+
+driver = webdriver.Chrome(options=chrome_options)
+try:
+    driver.get(URL)
+    WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, OFFER_SELECTOR)))
+
+    while True:
+        offers_before = count_offers(driver)
+        button = find_load_more(driver, BUTTON_WAIT_SECONDS)
+        if button is None:
+            break
+
+        loaded = False
+        # A slow page load is retried instead of silently ending the scrape.
+        for attempt in range(1, LOAD_MORE_ATTEMPTS + 1):
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+            driver.execute_script("arguments[0].click();", button)
+            try:
+                WebDriverWait(driver, LOAD_WAIT_SECONDS).until(
+                    lambda browser: count_offers(browser) > offers_before
+                )
+                loaded = True
+                break
+            except TimeoutException:
+                print(f"Load more timed out at {offers_before} offers (attempt {attempt}/{LOAD_MORE_ATTEMPTS})", file=sys.stderr)
+                button = find_load_more(driver, BUTTON_WAIT_SECONDS)
+                if button is None:
+                    break
+
+        if not loaded:
+            break
+
+    page_source = driver.page_source
+finally:
+    driver.quit()
 
 soup = BeautifulSoup(page_source, "html.parser")
 products = [extract_product(item) for item in soup.select(OFFER_SELECTOR)]
+
+if len(products) < MIN_PRODUCTS:
+    # Exit before touching the CSV or importing, so products:scrape reports the failure.
+    sys.exit(
+        f"Only {len(products)} Maxima offers loaded (expected at least {MIN_PRODUCTS}); "
+        "the page probably did not finish loading. Nothing saved or imported."
+    )
 
 with OUTPUT_FILE.open("w", newline="", encoding="utf-8") as csvfile:
     fieldnames = [
