@@ -1,4 +1,4 @@
-@php($pendingInvitations = auth()->user()->shoppingListInvitations()->count())
+@php($notificationCount = auth()->user()->shoppingListInvitations()->count() + auth()->user()->unreadNotifications()->count())
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
@@ -27,7 +27,7 @@
                 <flux:sidebar.item icon="chart-bar" :href="route('price-history')" :current="request()->routeIs('price-history')" wire:navigate>
                     {{ __('Cenu vēsture') }}
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="bell" :href="route('notifications')" :current="request()->routeIs('notifications')" :badge="$pendingInvitations ?: null" wire:navigate>
+                <flux:sidebar.item icon="bell" :href="route('notifications')" :current="request()->routeIs('notifications')" :badge="$notificationCount ?: null" wire:navigate>
                     {{ __('Paziņojumi') }}
                 </flux:sidebar.item>
             </flux:sidebar.nav>
@@ -63,7 +63,7 @@
                     :href="route('notifications')"
                     :current="request()->routeIs('notifications')"
                     :label="__('Paziņojumi')"
-                    :badge="$pendingInvitations ?: null"
+                    :badge="$notificationCount ?: null"
                     badge:color="red"
                     wire:navigate
                 />
@@ -88,7 +88,7 @@
                     icon="bell"
                     :href="route('notifications')"
                     :label="__('Paziņojumi')"
-                    :badge="$pendingInvitations ?: null"
+                    :badge="$notificationCount ?: null"
                     badge:color="red"
                     wire:navigate
                 />

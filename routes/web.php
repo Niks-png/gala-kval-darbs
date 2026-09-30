@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductWatchController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\ShoppingListController;
 use App\Http\Controllers\ShoppingListInvitationController;
@@ -33,7 +35,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('cart/{shoppingList}/activate', [ShoppingListController::class, 'activate'])->name('cart.activate');
     Route::post('cart/{shoppingList}/complete', [ShoppingListController::class, 'complete'])->name('cart.complete');
     Route::delete('cart/{shoppingList}/complete', [ShoppingListController::class, 'reopen'])->name('cart.reopen');
-    Route::get('notifications', [ShoppingListInvitationController::class, 'index'])->name('notifications');
+    Route::post('products/{product}/watch', [ProductWatchController::class, 'store'])->name('products.watch');
+    Route::delete('products/{product}/watch', [ProductWatchController::class, 'destroy'])->name('products.unwatch');
+
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
+    Route::delete('notifications', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::post('invitations/{invitation}/accept', [ShoppingListInvitationController::class, 'accept'])->name('invitations.accept');
     Route::delete('invitations/{invitation}', [ShoppingListInvitationController::class, 'destroy'])->name('invitations.destroy');
     Route::get('cart/join/{token}', [ShoppingListInviteController::class, 'accept'])->name('cart.invite.accept');

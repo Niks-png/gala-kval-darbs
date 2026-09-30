@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['title', 'store', 'category', 'description', 'price', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url'])]
@@ -12,6 +13,14 @@ class Product extends Model
     public function priceHistory(): HasMany
     {
         return $this->hasMany(ProductPriceHistory::class);
+    }
+
+    /**
+     * Users who follow this product for price-drop alerts.
+     */
+    public function watchers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'product_watches')->withTimestamps();
     }
 
     /**

@@ -83,6 +83,7 @@ class ProductController extends Controller
                 ->orderBy('name')
                 ->get(),
             'activeListId' => (int) $request->session()->get('active_shopping_list_id'),
+            'isWatching' => $request->user()->isWatching($product),
         ]);
     }
 

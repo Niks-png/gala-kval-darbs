@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Product;
 use App\Models\ProductPriceHistory;
+use App\Services\PriceDropNotifier;
 use App\Services\ProductCategorizer;
 use Illuminate\Console\Command;
 use RuntimeException;
@@ -23,7 +24,7 @@ class ImportProductsCommand extends Command
      */
     protected $description = 'Import scraped products into the database';
 
-    public function handle(ProductCategorizer $categorizer): int
+    public function handle(ProductCategorizer $categorizer, PriceDropNotifier $notifier): int
     {
         $fileArgument = (string) $this->argument('file');
         $filePath = preg_match('/^(?:[A-Za-z]:[\\\\\/]|[\\\\\/])/', $fileArgument)
@@ -131,6 +132,11 @@ class ImportProductsCommand extends Command
 
             if ($priceChanges !== []) {
                 ProductPriceHistory::insert($priceChanges);
+
+                $alerts = $notifier->notify($priceChanges);
+                if ($alerts > 0) {
+                    $this->info(sprintf('Sent %d price drop alerts.', $alerts));
+                }
             }
         }
 

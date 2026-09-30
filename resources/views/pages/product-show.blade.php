@@ -56,6 +56,25 @@
                     <flux:text>{{ __('Parastā cena: :price', ['price' => $product->original_price]) }}</flux:text>
                 @endif
 
+                <div class="flex flex-wrap items-center gap-3">
+                    <form method="POST" action="{{ route($isWatching ? 'products.unwatch' : 'products.watch', $product) }}">
+                        @csrf
+                        @if ($isWatching)
+                            @method('DELETE')
+                            <flux:button type="submit" size="sm" icon="bell-alert" data-test="unwatch-button" aria-pressed="true">
+                                {{ __('Seko cenai') }}
+                            </flux:button>
+                        @else
+                            <flux:button type="submit" size="sm" icon="bell" data-test="watch-button" aria-pressed="false">
+                                {{ __('Sekot cenai') }}
+                            </flux:button>
+                        @endif
+                    </form>
+                    <flux:text class="text-sm">
+                        {{ session('watch_status') ?? ($isWatching ? __('Paziņosim, kad cena kritīsies. Spied vēlreiz, lai pārtrauktu.') : __('Saņem paziņojumu, kad cena kritīsies.')) }}
+                    </flux:text>
+                </div>
+
                 <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
                     @if ($lists->isEmpty())
                         <flux:text>{{ __('Tev nav neviena atvērta saraksta, kurā pievienot produktu.') }}</flux:text>
