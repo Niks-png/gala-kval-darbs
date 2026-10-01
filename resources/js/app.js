@@ -37,6 +37,8 @@ function initStoreMap() {
     const chainColors = {
         'maxima.lv': '#e30613',
         'etop.lv': '#00843d',
+        'rimi.lv': '#c8102e',
+        'lidl.lv': '#0050aa',
     };
 
     const markers = stores.map((store) => {

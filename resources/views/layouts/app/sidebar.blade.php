@@ -30,6 +30,11 @@
                 <flux:sidebar.item icon="bell" :href="route('notifications')" :current="request()->routeIs('notifications')" :badge="$notificationCount ?: null" wire:navigate>
                     {{ __('Paziņojumi') }}
                 </flux:sidebar.item>
+                @can('admin')
+                    <flux:sidebar.item icon="shield-check" :href="route('admin.index')" :current="request()->routeIs('admin.*')" wire:navigate>
+                        {{ __('Administrācija') }}
+                    </flux:sidebar.item>
+                @endcan
             </flux:sidebar.nav>
 
             <flux:spacer />

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductWatchController;
@@ -55,6 +57,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('cart/{shoppingList}/items/{product}', [ShoppingListController::class, 'increase'])->name('cart.lists.items.store');
     Route::post('cart/{shoppingList}/items/{product}/decrease', [ShoppingListController::class, 'decrease'])->name('cart.lists.items.decrease');
     Route::delete('cart/{shoppingList}/items/{product}', [ShoppingListController::class, 'destroyItem'])->name('cart.lists.items.destroy');
+});
+
+Route::middleware(['auth', 'verified', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('index');
+    Route::post('scrape', [AdminDashboardController::class, 'scrape'])->name('scrape');
+    Route::get('users', [AdminUserController::class, 'index'])->name('users');
+    Route::patch('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 });
 
 require __DIR__.'/settings.php';

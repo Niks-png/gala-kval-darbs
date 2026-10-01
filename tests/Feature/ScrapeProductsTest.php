@@ -10,9 +10,11 @@ test('products:scrape runs every store scraper', function () {
 
     $this->artisan('products:scrape')->assertSuccessful();
 
-    Process::assertRanTimes(fn (PendingProcess $process) => $process->command[0] === 'py', 2);
+    Process::assertRanTimes(fn (PendingProcess $process) => $process->command[0] === 'py', 4);
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'maxima_scraper.py'));
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'top_scraper.py'));
+    Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'rimi_scraper.py'));
+    Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'lidl_scraper.py'));
 });
 
 test('products:scrape can run a single store', function () {
@@ -40,7 +42,7 @@ test('a failing scraper does not stop the others but fails the command', functio
 test('products:scrape rejects unknown stores', function () {
     Process::fake();
 
-    $this->artisan('products:scrape', ['store' => ['lidl']])->assertFailed();
+    $this->artisan('products:scrape', ['store' => ['aldi']])->assertFailed();
 
     Process::assertNothingRan();
 });
