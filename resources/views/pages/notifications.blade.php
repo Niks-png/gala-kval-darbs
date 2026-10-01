@@ -110,7 +110,7 @@
                     @foreach ($watchedProducts as $watched)
                         <div class="flex items-center justify-between gap-3 px-4 py-3">
                             <div class="min-w-0">
-                                <a href="{{ route('products.show', $watched) }}" wire:navigate class="block truncate text-sm font-medium hover:text-emerald-400">{{ $watched->title }}</a>
+                                <a href="{{ route('products.show', $watched) }}" wire:navigate class="block truncate text-sm font-medium text-zinc-100 hover:text-emerald-400">{{ $watched->title }}</a>
                                 <flux:text class="text-xs">
                                     {{ $watched->store }} · <span class="font-mono tabular-nums">{{ $watched->current_price !== null ? lv_number($watched->current_price).' €' : '—' }}</span>
                                 </flux:text>

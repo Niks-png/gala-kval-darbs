@@ -1,23 +1,28 @@
 import csv
+import os
 import re
 import shutil
 import subprocess
+import sys
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.parse import urljoin
 
+import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
 URL = "https://www.maxima.lv/bukleti"
 BASE_URL = "https://www.maxima.lv"
+# The page loads more offers on scroll from this endpoint; calling it directly
+# takes seconds instead of minutes and needs no browser.
+LOAD_MORE_URL = "https://www.maxima.lv/ajax/salesloadmore"
+BATCH_SIZE = 100
+MAX_BATCHES = 50
 STORE = "maxima.lv"
 OUTPUT_FILE = Path(__file__).with_name("maxima_products.csv")
 OFFER_SELECTOR = ".offer-item"
+# Fewer offers than this means the page did not load properly; keep the previous data instead.
+MIN_PRODUCTS = int(os.environ.get("MAXIMA_MIN_PRODUCTS", "100"))
 
 
 def parse_price(value: str) -> Decimal | None:
@@ -79,40 +84,40 @@ def extract_product(item) -> dict[str, str]:
     }
 
 
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless=new")
-chrome_options.add_argument("--window-size=1920,1080")
-chrome_options.add_experimental_option(
-    "prefs", {"profile.managed_default_content_settings.images": 2}
-)
-
-driver = webdriver.Chrome(options=chrome_options)
-wait = WebDriverWait(driver, 10)
-driver.get(URL)
-wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, OFFER_SELECTOR)))
-
-while True:
-    offers_before = len(driver.find_elements(By.CSS_SELECTOR, OFFER_SELECTOR))
-    buttons = driver.find_elements(By.CSS_SELECTOR, ".lv-load-more .lv-loader")
-    if not buttons:
-        break
-
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", buttons[0])
-    driver.execute_script("arguments[0].click();", buttons[0])
+def fetch_batch(session: requests.Session, offset: int) -> list:
+    """One batch of offers from the endpoint the page's infinite scroll uses."""
+    response = session.post(LOAD_MORE_URL, params={"sort_by": "newest", "limit": BATCH_SIZE, "search": ""},
+                            data={"offset": offset}, timeout=60)
+    response.raise_for_status()
 
     try:
-        wait.until(
-            lambda browser: len(browser.find_elements(By.CSS_SELECTOR, OFFER_SELECTOR))
-            > offers_before
-        )
-    except TimeoutException:
+        html = response.json().get("html", "")
+    except ValueError:
+        html = response.text
+
+    return BeautifulSoup(html, "html.parser").select(OFFER_SELECTOR)
+
+
+session = requests.Session()
+session.headers.update({"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"})
+session.get(URL, timeout=60).raise_for_status()  # same session/cookies as a browser visit
+
+items = []
+for _ in range(MAX_BATCHES):
+    batch = fetch_batch(session, len(items))
+    items.extend(batch)
+    print(f"Fetched {len(items)} Maxima offers...", flush=True)
+    if len(batch) < BATCH_SIZE:
         break
 
-page_source = driver.page_source
-driver.quit()
+products = [extract_product(item) for item in items]
 
-soup = BeautifulSoup(page_source, "html.parser")
-products = [extract_product(item) for item in soup.select(OFFER_SELECTOR)]
+if len(products) < MIN_PRODUCTS:
+    # Exit before touching the CSV or importing, so products:scrape reports the failure.
+    sys.exit(
+        f"Only {len(products)} Maxima offers loaded (expected at least {MIN_PRODUCTS}); "
+        "Maxima's site probably changed or failed. Nothing saved or imported."
+    )
 
 with OUTPUT_FILE.open("w", newline="", encoding="utf-8") as csvfile:
     fieldnames = [

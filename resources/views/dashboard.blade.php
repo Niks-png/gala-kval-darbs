@@ -65,7 +65,7 @@
             @else
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($products as $product)
-                        <x-product-card :product="$product" />
+                        <x-product-card :product="$product" :watched="$watchedIds->contains($product->id)" />
                     @endforeach
                 </div>
 

@@ -91,6 +91,11 @@ body {
     font-family: var(--font-sans);
 }
 
+/* Default text colour so plain text and links never fall back to browser black */
+.dark body {
+    color: var(--color-zinc-100);
+}
+
 @layer base {
 
     *,

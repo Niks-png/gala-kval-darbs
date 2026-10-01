@@ -37,6 +37,8 @@ function initStoreMap() {
     const chainColors = {
         'maxima.lv': '#e30613',
         'etop.lv': '#00843d',
+        'rimi.lv': '#c8102e',
+        'lidl.lv': '#0050aa',
     };
 
     const markers = stores.map((store) => {
@@ -116,6 +118,44 @@ document.addEventListener('input', (event) => {
 
 document.addEventListener('DOMContentLoaded', updateAllPasswordRequirements);
 document.addEventListener('livewire:navigated', updateAllPasswordRequirements);
+
+// Follow bell on product cards (resources/views/components/product-card.blade.php).
+// Without JS the form still works as a normal POST/DELETE with a redirect back.
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest?.('.watch-form');
+
+    if (!form) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const button = form.querySelector('button');
+    button.disabled = true;
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+            body: new FormData(form),
+        });
+
+        if (!response.ok) {
+            return;
+        }
+
+        const { watching } = await response.json();
+        const label = watching ? form.dataset.labelUnwatch : form.dataset.labelWatch;
+
+        form.toggleAttribute('data-watching', watching);
+        form.querySelector('input[name="_method"]').value = watching ? 'DELETE' : 'POST';
+        button.setAttribute('aria-pressed', watching ? 'true' : 'false');
+        button.setAttribute('aria-label', label);
+        button.title = label;
+    } finally {
+        button.disabled = false;
+    }
+});
 
 // Livewire forms reset their inputs after saving without firing "input".
 document.addEventListener('livewire:init', () => {
