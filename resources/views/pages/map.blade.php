@@ -2,7 +2,7 @@
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div>
             <flux:heading size="xl">{{ __('Karte') }}</flux:heading>
-            <flux:text class="mt-2">{{ __('Maxima un top! veikalu atrašanās vietas visā Latvijā.') }}</flux:text>
+            <flux:text class="mt-2">{{ __('Maxima, top! un Rimi veikalu atrašanās vietas visā Latvijā.') }}</flux:text>
         </div>
 
         @if ($stores->isEmpty())

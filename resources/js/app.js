@@ -34,11 +34,18 @@ function initStoreMap() {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
+    // Rimi's brand red is too close to Maxima's to tell apart on the map, so it gets orange.
     const chainColors = {
         'maxima.lv': '#e30613',
         'etop.lv': '#00843d',
-        'rimi.lv': '#c8102e',
+        'rimi.lv': '#f28c00',
         'lidl.lv': '#0050aa',
+    };
+    const chainNames = {
+        'maxima.lv': 'Maxima',
+        'etop.lv': 'top!',
+        'rimi.lv': 'Rimi',
+        'lidl.lv': 'Lidl',
     };
 
     const markers = stores.map((store) => {
@@ -58,6 +65,24 @@ function initStoreMap() {
 
     if (markers.length) {
         map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
+    }
+
+    const chains = [...new Set(stores.map((store) => store.chain))].filter((chain) => chainNames[chain]);
+
+    if (chains.length) {
+        const legend = L.control({ position: 'bottomleft' });
+
+        legend.onAdd = () => {
+            const div = L.DomUtil.create('div');
+            div.style.cssText = 'background:#fff;color:#222;padding:6px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.3);font-size:12px;line-height:1.8;';
+            div.innerHTML = chains
+                .map((chain) => `<div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${chainColors[chain]};margin-right:6px;"></span>${chainNames[chain]}</div>`)
+                .join('');
+
+            return div;
+        };
+
+        legend.addTo(map);
     }
 }
 
