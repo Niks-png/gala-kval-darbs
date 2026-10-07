@@ -20,21 +20,21 @@ class ShoppingListMemberController extends Controller
             'email' => ['required', 'email', Rule::exists('users', 'email')],
             'role' => ['required', Rule::in(ShoppingList::ROLES)],
         ], [
-            'email.exists' => 'Lietotājs ar šādu e-pastu nav atrasts.',
+            'email.exists' => __('Lietotājs ar šādu e-pastu nav atrasts.'),
         ]);
 
         $member = User::query()->where('email', $validated['email'])->firstOrFail();
 
         if ($shoppingList->isOwnedBy($member)) {
-            throw ValidationException::withMessages(['email' => 'Tu jau esi šī saraksta īpašnieks.']);
+            throw ValidationException::withMessages(['email' => __('Tu jau esi šī saraksta īpašnieks.')]);
         }
 
         if ($shoppingList->members()->whereKey($member->id)->exists()) {
-            throw ValidationException::withMessages(['email' => 'Šis lietotājs jau ir pievienots sarakstam.']);
+            throw ValidationException::withMessages(['email' => __('Šis lietotājs jau ir pievienots sarakstam.')]);
         }
 
         if ($shoppingList->invitations()->where('user_id', $member->id)->exists()) {
-            throw ValidationException::withMessages(['email' => 'Šim lietotājam jau ir nosūtīts uzaicinājums.']);
+            throw ValidationException::withMessages(['email' => __('Šim lietotājam jau ir nosūtīts uzaicinājums.')]);
         }
 
         $shoppingList->invitations()->create([
@@ -43,7 +43,7 @@ class ShoppingListMemberController extends Controller
             'role' => $validated['role'],
         ]);
 
-        return back()->with('success', "Uzaicinājums nosūtīts: {$member->name}")->with('members_modal', true);
+        return back()->with('success', __('Uzaicinājums nosūtīts: :name', ['name' => $member->name]))->with('members_modal', true);
     }
 
     public function update(Request $request, ShoppingList $shoppingList, User $user): RedirectResponse
@@ -58,7 +58,7 @@ class ShoppingListMemberController extends Controller
 
         $shoppingList->members()->updateExistingPivot($user->id, ['role' => $validated['role']]);
 
-        return back()->with('success', 'Tiesības atjauninātas')->with('members_modal', true);
+        return back()->with('success', __('Tiesības atjauninātas'))->with('members_modal', true);
     }
 
     public function destroy(Request $request, ShoppingList $shoppingList, User $user): RedirectResponse
@@ -74,9 +74,9 @@ class ShoppingListMemberController extends Controller
         $shoppingList->members()->detach($user->id);
 
         if ($leaving) {
-            return to_route('cart')->with('success', 'Tu pameti sarakstu');
+            return to_route('cart')->with('success', __('Tu pameti sarakstu'));
         }
 
-        return back()->with('success', 'Lietotājs noņemts no saraksta')->with('members_modal', true);
+        return back()->with('success', __('Lietotājs noņemts no saraksta'))->with('members_modal', true);
     }
 }

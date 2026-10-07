@@ -20,7 +20,7 @@ class ShoppingListInvitationController extends Controller
 
         $invitation->delete();
 
-        return to_route('cart.show', $list)->with('success', 'Tu pievienojies sarakstam');
+        return to_route('cart.show', $list)->with('success', __('Tu pievienojies sarakstam'));
     }
 
     /**
@@ -36,9 +36,9 @@ class ShoppingListInvitationController extends Controller
         $invitation->delete();
 
         if ($isInvitee) {
-            return back()->with('success', 'Uzaicinājums noraidīts');
+            return back()->with('success', __('Uzaicinājums noraidīts'));
         }
 
-        return back()->with('success', 'Uzaicinājums atsaukts')->with('members_modal', true);
+        return back()->with('success', __('Uzaicinājums atsaukts'))->with('members_modal', true);
     }
 }

@@ -11,25 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasTable('products')) {
-            Schema::table('products', function (Blueprint $table) {
-                if (! Schema::hasColumn('products', 'original_price')) {
-                    $table->string('original_price')->nullable();
-                }
-                if (! Schema::hasColumn('products', 'current_price')) {
-                    $table->decimal('current_price', 10, 2)->nullable();
-                }
-            });
-
-            return;
-        }
-
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->unique();
+            $table->string('title');
+            // Store domain the product was scraped from ("rimi.lv", "etop.lv", ...).
+            $table->string('store');
+            // Text, not a number: top! gives the regular price as a range ("5.59 € - 5.99 €").
             $table->string('original_price')->nullable();
             $table->decimal('current_price', 10, 2)->nullable();
+            $table->decimal('unit_price', 10, 2)->nullable();
+            $table->string('unit')->nullable();
+            $table->string('image_url')->nullable();
+            $table->string('category')->nullable()->index();
             $table->timestamps();
+
+            // Shops sell products with the same name, so a product is a title within one store.
+            $table->unique(['title', 'store']);
         });
     }
 

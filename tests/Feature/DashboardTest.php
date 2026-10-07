@@ -228,7 +228,6 @@ test('product imports record changed previous prices', function () {
         'title' => 'Fresh Milk',
         'store' => 'etop.lv',
         'current_price' => 1.99,
-        'price' => 1.99,
     ]);
     $csvPath = tempnam(sys_get_temp_dir(), 'products-');
     file_put_contents($csvPath, implode("\n", [

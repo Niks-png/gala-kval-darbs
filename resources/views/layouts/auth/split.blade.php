@@ -44,7 +44,7 @@
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="flex size-6 shrink-0 items-center justify-center rounded-md bg-emerald-300/20 text-xs text-emerald-300">⧫</span>
-                                <span>{{ __('Apskati tuvākos Maxima un top! veikalus kartē.') }}</span>
+                                <span>{{ __('Apskati tuvākos Maxima, top! un Rimi veikalus kartē.') }}</span>
                             </li>
                         </ul>
                     </div>

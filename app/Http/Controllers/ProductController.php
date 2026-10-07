@@ -25,8 +25,8 @@ class ProductController extends Controller
                 ->orderBy('title')
                 ->paginate(30)
                 ->withQueryString(),
-            'productCount' => Product::query()->count(),
-            'storeCount' => Product::query()->whereNotNull('store')->distinct('store')->count('store'),
+            'productCount' => Product::query()->onOffer()->count(),
+            'storeCount' => Product::query()->onOffer()->distinct('store')->count('store'),
             'recentPriceDrops' => ProductPriceHistory::query()
                 ->whereColumn('new_price', '<', 'previous_price')
                 ->where('created_at', '>=', now()->subWeek())
@@ -117,8 +117,8 @@ class ProductController extends Controller
     private function filterOptions(): array
     {
         return [
-            'stores' => Product::query()->whereNotNull('store')->distinct()->orderBy('store')->pluck('store'),
-            'categories' => Product::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
+            'stores' => Product::query()->onOffer()->distinct()->orderBy('store')->pluck('store'),
+            'categories' => Product::query()->onOffer()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
         ];
     }
 
@@ -128,7 +128,7 @@ class ProductController extends Controller
      */
     private function filteredQuery(array $filters): Builder
     {
-        return Product::query()
+        return Product::query()->onOffer()
             ->when($filters['query'] !== '', fn (Builder $products) => $products->where('title', 'like', "%{$filters['query']}%"))
             ->when($filters['store'] !== '', fn (Builder $products) => $products->where('store', $filters['store']))
             ->when($filters['category'] !== '', fn (Builder $products) => $products->where('category', $filters['category']));

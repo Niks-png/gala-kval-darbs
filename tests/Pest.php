@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Process\PendingProcess;
+use Illuminate\Support\Facades\Process;
 use Tests\TestCase;
 
 /*
@@ -44,7 +46,30 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Fake the Python store scrapers. Each run saves a one-product CSV where products:scrape
+ * asks for it (in a temporary folder), unless $failures gives that store an error message.
+ *
+ * @param  array<string, string>  $failures  Store key ("maxima") => error output
+ */
+function fakeScrapers(array $failures = []): void
 {
-    // ..
+    config(['services.scraper.output_dir' => sys_get_temp_dir().DIRECTORY_SEPARATOR.'scrapers-'.uniqid()]);
+
+    Process::fake(function (PendingProcess $process) use ($failures) {
+        [, $script, $csvPath] = $process->command;
+        $store = basename($script, '_scraper.py');
+
+        if (isset($failures[$store])) {
+            return Process::result(errorOutput: $failures[$store], exitCode: 1);
+        }
+
+        if (! is_dir(dirname($csvPath))) {
+            mkdir(dirname($csvPath), recursive: true);
+        }
+
+        file_put_contents($csvPath, "title,store,original_price,current_price,unit_price,unit\nPiens,{$store}.lv,,0.99,,\n");
+
+        return Process::result("Saved 1 {$store} products");
+    });
 }

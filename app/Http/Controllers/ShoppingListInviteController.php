@@ -28,7 +28,7 @@ class ShoppingListInviteController extends Controller
         ])->save();
 
         return back()
-            ->with('success', 'Uzaicinājuma saite izveidota')
+            ->with('success', __('Uzaicinājuma saite izveidota'))
             ->with('members_modal', true);
     }
 
@@ -42,7 +42,7 @@ class ShoppingListInviteController extends Controller
         $shoppingList->forceFill(['invite_token' => null])->save();
 
         return back()
-            ->with('success', 'Uzaicinājuma saite atslēgta')
+            ->with('success', __('Uzaicinājuma saite atslēgta'))
             ->with('members_modal', true);
     }
 
@@ -61,6 +61,6 @@ class ShoppingListInviteController extends Controller
         $shoppingList->members()->attach($user->id, ['role' => $shoppingList->invite_role]);
         $shoppingList->invitations()->where('user_id', $user->id)->delete();
 
-        return to_route('cart.show', $shoppingList)->with('success', 'Tu pievienojies sarakstam');
+        return to_route('cart.show', $shoppingList)->with('success', __('Tu pievienojies sarakstam'));
     }
 }

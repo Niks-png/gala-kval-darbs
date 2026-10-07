@@ -97,3 +97,16 @@ test('finished lists are not used as the active list', function () {
     expect($done->products()->count())->toBe(0)
         ->and(ShoppingList::query()->open()->where('user_id', $user->id)->first()->products()->count())->toBe(1);
 });
+
+test('ended offers are hidden from the product list but their page says the offer ended', function () {
+    $this->actingAs(User::factory()->create());
+    $ended = Product::query()->create(['title' => 'Vecais piens', 'store' => 'rimi.lv', 'current_price' => 0.99, 'offer_ended_at' => now()]);
+    Product::query()->create(['title' => 'Jaunais piens', 'store' => 'rimi.lv', 'current_price' => 1.09]);
+
+    $this->get(route('dashboard'))->assertSee('Jaunais piens')->assertDontSee('Vecais piens');
+    $this->get(route('products.search', ['q' => 'piens']))->assertSee('Jaunais piens')->assertDontSee('Vecais piens');
+
+    $this->get(route('products.show', $ended))
+        ->assertOk()
+        ->assertSee('Šis piedāvājums beidzās', false);
+});

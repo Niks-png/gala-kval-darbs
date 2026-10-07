@@ -5,7 +5,6 @@ use App\Models\Product;
 use App\Models\ScrapeRun;
 use App\Models\ShoppingList;
 use App\Models\User;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Queue;
 
 test('guests and regular users cannot open the admin panel', function () {
@@ -55,10 +54,7 @@ test('admins can queue a scrape for one store or all stores', function () {
 });
 
 test('products:scrape records each store run for the admin panel', function () {
-    Process::fake([
-        '*maxima_scraper.py*' => Process::result(errorOutput: 'Maxima site changed', exitCode: 1),
-        '*' => Process::result('Saved 10 products'),
-    ]);
+    fakeScrapers(['maxima' => 'Maxima site changed']);
 
     $this->artisan('products:scrape', ['store' => ['maxima', 'rimi']])->assertFailed();
 

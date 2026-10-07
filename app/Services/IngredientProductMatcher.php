@@ -162,7 +162,7 @@ class IngredientProductMatcher
             return null;
         }
 
-        $candidates = Product::query()
+        $candidates = Product::query()->onOffer()
             ->whereNotNull('current_price')
             ->where(function (Builder $query) use ($terms): void {
                 foreach ($terms as $term) {

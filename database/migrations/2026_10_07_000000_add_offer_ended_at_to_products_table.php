@@ -12,12 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            if (! Schema::hasColumn('products', 'unit_price')) {
-                $table->decimal('unit_price', 10, 2)->nullable()->after('current_price');
-            }
-            if (! Schema::hasColumn('products', 'unit')) {
-                $table->string('unit')->nullable()->after('unit_price');
-            }
+            // Set when the store's latest scrape no longer has the product; cleared if it comes back.
+            $table->timestamp('offer_ended_at')->nullable()->index()->after('category');
         });
     }
 
@@ -27,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn(['unit_price', 'unit']);
+            $table->dropColumn('offer_ended_at');
         });
     }
 };

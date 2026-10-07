@@ -130,6 +130,9 @@ new class extends Component {
                             <flux:heading size="sm" @class(['line-through' => $checked])><a href="{{ route('products.show', $product) }}" wire:navigate class="hover:text-emerald-600">{{ $product->title }}</a></flux:heading>
                             <flux:text>
                                 {{ $product->store }}
+                                @if ($product->offerHasEnded() && ! $checked)
+                                    · <span class="text-amber-600 dark:text-amber-400">{{ __('piedāvājums beidzies') }}</span>
+                                @endif
                                 @if ($checked && isset($this->checkerNames[$product->pivot->checked_by]))
                                     · {{ __('nopirka :name', ['name' => $this->checkerNames[$product->pivot->checked_by]]) }}
                                 @endif

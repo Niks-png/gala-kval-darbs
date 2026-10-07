@@ -18,16 +18,16 @@
                     <nav class="flex items-center gap-3">
                         @auth
                             <flux:button :href="route('dashboard')" variant="primary" wire:navigate>
-                                {{ __('Dashboard') }}
+                                {{ __('Sākums') }}
                             </flux:button>
                         @else
                             <flux:button :href="route('login')" variant="ghost" class="!text-white hover:!bg-white/10" wire:navigate>
-                                {{ __('Log in') }}
+                                {{ __('Pieslēgties') }}
                             </flux:button>
 
                             @if (Route::has('register'))
                                 <flux:button :href="route('register')" variant="primary" wire:navigate>
-                                    {{ __('Sign up') }}
+                                    {{ __('Reģistrēties') }}
                                 </flux:button>
                             @endif
                         @endauth

@@ -6,17 +6,18 @@ use App\Models\ScrapeRun;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
+use Throwable;
 
 class ScrapeProductsCommand extends Command
 {
     /**
-     * Each scraper writes its CSV and then runs products:import itself.
+     * Each scraper only saves a CSV (to the path it is given); this command then imports it.
      */
     public const SCRAPERS = [
-        'maxima' => 'public/maxima_scraper.py',
-        'top' => 'public/top_scraper.py',
-        'rimi' => 'public/rimi_scraper.py',
-        'lidl' => 'public/lidl_scraper.py',
+        'maxima' => 'scrapers/maxima_scraper.py',
+        'top' => 'scrapers/top_scraper.py',
+        'rimi' => 'scrapers/rimi_scraper.py',
+        'lidl' => 'scrapers/lidl_scraper.py',
     ];
 
     /**
@@ -61,34 +62,70 @@ class ScrapeProductsCommand extends Command
                 'started_at' => now(),
             ]);
 
-            // Stream the scraper's progress as it runs so a long scrape doesn't look frozen.
-            $result = Process::path(base_path())
-                ->timeout(config('services.scraper.timeout'))
-                ->env(['PYTHONIOENCODING' => 'utf-8', 'PYTHONUNBUFFERED' => '1'])
-                ->run(
-                    [config('services.scraper.python'), base_path(self::SCRAPERS[$store])],
-                    fn (string $type, string $output) => $this->output->write($output),
-                );
+            $csvPath = $this->csvPath($store);
+            [$exitCode, $error] = $this->scrape($store, $csvPath);
+
+            if ($exitCode === 0) {
+                [$exitCode, $error] = $this->import($csvPath);
+            }
 
             $run->update([
-                'status' => $result->successful() ? ScrapeRun::STATUS_SUCCESS : ScrapeRun::STATUS_FAILED,
-                'exit_code' => $result->exitCode(),
-                'error' => $result->successful() ? null : mb_substr($result->errorOutput(), -2000),
+                'status' => $exitCode === 0 ? ScrapeRun::STATUS_SUCCESS : ScrapeRun::STATUS_FAILED,
+                'exit_code' => $exitCode,
+                'error' => $error,
                 'finished_at' => now(),
             ]);
 
-            if ($result->successful()) {
+            if ($exitCode === 0) {
                 continue;
             }
 
             $failed[] = $store;
-            $this->error("Scraping {$store} failed (exit code {$result->exitCode()}).");
+            $this->error("Scraping {$store} failed (exit code {$exitCode}).");
             Log::error("products:scrape failed for {$store}", [
-                'exit_code' => $result->exitCode(),
-                'error' => mb_substr($result->errorOutput(), -2000),
+                'exit_code' => $exitCode,
+                'error' => $error,
             ]);
         }
 
         return $failed === [] ? self::SUCCESS : self::FAILURE;
+    }
+
+    private function csvPath(string $store): string
+    {
+        return rtrim(config('services.scraper.output_dir'), '\\/').DIRECTORY_SEPARATOR."{$store}_products.csv";
+    }
+
+    /**
+     * Run the store's scraper, which saves its offers to $csvPath.
+     *
+     * @return array{int, string|null} Exit code and error output
+     */
+    private function scrape(string $store, string $csvPath): array
+    {
+        // Stream the scraper's progress as it runs so a long scrape doesn't look frozen.
+        $result = Process::path(base_path())
+            ->timeout(config('services.scraper.timeout'))
+            ->env(['PYTHONIOENCODING' => 'utf-8', 'PYTHONUNBUFFERED' => '1'])
+            ->run(
+                [config('services.scraper.python'), base_path(self::SCRAPERS[$store]), $csvPath],
+                fn (string $type, string $output) => $this->output->write($output),
+            );
+
+        return [(int) $result->exitCode(), $result->successful() ? null : mb_substr($result->errorOutput(), -2000)];
+    }
+
+    /**
+     * @return array{int, string|null} Exit code and error message
+     */
+    private function import(string $csvPath): array
+    {
+        try {
+            $exitCode = $this->call('products:import', ['file' => $csvPath]);
+        } catch (Throwable $exception) {
+            return [self::FAILURE, 'Import failed: '.$exception->getMessage()];
+        }
+
+        return [$exitCode, $exitCode === self::SUCCESS ? null : "Import failed: could not read {$csvPath}."];
     }
 }

@@ -98,7 +98,7 @@ class ShoppingListController extends Controller
 
         $request->session()->put('active_shopping_list_id', $list->id);
 
-        return back()->with('success', 'Saraksts izveidots');
+        return back()->with('success', __('Saraksts izveidots'));
     }
 
     public function show(Request $request, ShoppingList $shoppingList): View
@@ -123,7 +123,7 @@ class ShoppingListController extends Controller
 
         $shoppingList->update($validated);
 
-        return back()->with('success', 'Saraksts pārdēvēts');
+        return back()->with('success', __('Saraksts pārdēvēts'));
     }
 
     public function destroy(Request $request, ShoppingList $shoppingList): RedirectResponse
@@ -145,7 +145,7 @@ class ShoppingListController extends Controller
 
         $request->session()->put('active_shopping_list_id', $shoppingList->id);
 
-        return back()->with('success', 'Aktīvais saraksts nomainīts');
+        return back()->with('success', __('Aktīvais saraksts nomainīts'));
     }
 
     public function quickAdd(Request $request, Product $product): RedirectResponse|JsonResponse
@@ -153,10 +153,10 @@ class ShoppingListController extends Controller
         $this->incrementItem($this->activeList($request), $product);
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'Produkts veiksmīgi pievienots iepirkuma sarakstam']);
+            return response()->json(['message' => __('Produkts veiksmīgi pievienots iepirkuma sarakstam')]);
         }
 
-        return back()->with('success', 'Produkts veiksmīgi pievienots iepirkuma sarakstam');
+        return back()->with('success', __('Produkts veiksmīgi pievienots iepirkuma sarakstam'));
     }
 
     public function increase(Request $request, ShoppingList $shoppingList, Product $product): RedirectResponse

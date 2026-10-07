@@ -29,11 +29,13 @@ return [
     ],
 
     'scraper' => [
-        // Python interpreter that runs public/*_scraper.py (e.g. "py", "python3" or a full path)
+        // Python interpreter that runs scrapers/*_scraper.py (e.g. "py", "python3" or a full path)
         'python' => env('SCRAPER_PYTHON', 'python'),
         // Local time of the daily scrape + import
         'daily_at' => env('SCRAPER_DAILY_AT', '06:00'),
         'timeout' => (int) env('SCRAPER_TIMEOUT', 1800),
+        // Folder the scrapers save their <store>_products.csv files to before they are imported
+        'output_dir' => env('SCRAPER_OUTPUT_DIR', base_path('scrapers')),
     ],
 
     'slack' => [

@@ -43,6 +43,12 @@
                     <flux:heading size="xl" class="mt-3">{{ $product->title }}</flux:heading>
                 </div>
 
+                @if ($product->offerHasEnded())
+                    <flux:callout variant="warning" icon="clock" data-test="offer-ended">
+                        <flux:callout.text>{{ __('Šis piedāvājums beidzās :date. Cena var būt mainījusies.', ['date' => $product->offer_ended_at->format('d.m.Y')]) }}</flux:callout.text>
+                    </flux:callout>
+                @endif
+
                 <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                     <span class="text-3xl font-semibold">{{ $price !== null ? lv_number($price, 2) . ' €' : '—' }}</span>
                     @if ($latest && $price !== null && (float) $latest->previous_price > $price)
