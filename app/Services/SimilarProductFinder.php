@@ -38,6 +38,13 @@ class SimilarProductFinder
             ->where('store', '!=', $product->store)
             ->when($product->category !== null && $product->category !== ProductCategorizer::OTHER,
                 fn ($query) => $query->where('category', $product->category))
+            // A product sharing no stem scores 0, so only load titles containing one of them.
+            // Stems are letters only, so they need no LIKE escaping.
+            ->where(function ($query) use ($stems): void {
+                foreach ($stems as $stem) {
+                    $query->orWhere('title', 'like', "%{$stem}%");
+                }
+            })
             ->get()
             ->map(function (Product $candidate) use ($stems): Product {
                 $candidate->similarity = $this->similarity($stems, $this->stems($candidate->title));
