@@ -33,7 +33,7 @@ class AdminDashboardController extends Controller
             ->keyBy('store');
 
         // Scraper key ("rimi") => store value in the products table ("rimi.lv").
-        $stores = collect(ScrapeProductsCommand::SCRAPERS)->keys()->map(function (string $key) use ($products, $latestRuns): array {
+        $stores = collect(ScrapeProductsCommand::enabledStores())->map(function (string $key) use ($products, $latestRuns): array {
             $domain = ScrapeProductsCommand::STORE_DOMAINS[$key];
             $stats = $products->get($domain);
 
@@ -64,7 +64,7 @@ class AdminDashboardController extends Controller
     public function scrape(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'store' => ['nullable', Rule::in(array_keys(ScrapeProductsCommand::SCRAPERS))],
+            'store' => ['nullable', Rule::in(ScrapeProductsCommand::enabledStores())],
         ]);
 
         RunScrape::dispatch(isset($validated['store']) ? [$validated['store']] : []);

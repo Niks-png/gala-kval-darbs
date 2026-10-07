@@ -36,6 +36,9 @@ return [
         'timeout' => (int) env('SCRAPER_TIMEOUT', 1800),
         // Folder the scrapers save their <store>_products.csv files to before they are imported
         'output_dir' => env('SCRAPER_OUTPUT_DIR', base_path('scrapers')),
+        // Shops that are scraped and shown in the admin panel. Lidl is off: lidl.lv no longer lists its
+        // offers as products (only as leaflet images), so its scraper finds almost nothing.
+        'stores' => array_filter(array_map('trim', explode(',', env('SCRAPER_STORES', 'maxima,top,rimi')))),
     ],
 
     'slack' => [

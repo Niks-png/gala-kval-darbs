@@ -1,6 +1,6 @@
 # Cenu ceļvedis
 
-Compares current offers from Latvian grocery shops (Maxima, top!, Rimi, Lidl). Users can search and filter products, follow a product to get an alert when its price drops, build shared shopping lists, match a recipe's ingredients to the cheapest products, and find shops on a map.
+Compares current offers from Latvian grocery shops (Maxima, top! and Rimi). Users can search and filter products, follow a product to get an alert when its price drops, build shared shopping lists, match a recipe's ingredients to the cheapest products, and find shops on a map.
 
 Built with Laravel 13, Livewire and Flux. The prices are collected by Python scrapers in [`scrapers/`](scrapers).
 
@@ -77,10 +77,12 @@ To update prices by hand:
 
 ```bash
 php artisan products:scrape            # every shop
-php artisan products:scrape rimi lidl  # only these shops
+php artisan products:scrape rimi top   # only these shops
 ```
 
 Each scraper saves the shop's current offers to `scrapers/<shop>_products.csv`, and the command imports it. Products that are no longer in a shop's offers are marked as ended and hidden from product lists. If a shop's site fails and too few offers load, nothing is imported and the previous prices are kept. Every run is shown in the admin panel.
+
+Which shops are scraped is set by `SCRAPER_STORES` (default `maxima,top,rimi`). A Lidl scraper exists but is off: lidl.lv currently publishes its offers only as leaflet images, not as product listings, so it finds almost nothing. Add `lidl` to `SCRAPER_STORES` to try it again.
 
 ## Tests
 

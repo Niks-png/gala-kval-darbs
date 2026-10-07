@@ -33,20 +33,31 @@ class ScrapeProductsCommand extends Command
     /**
      * @var string
      */
-    protected $signature = 'products:scrape {store?* : Only these stores (maxima, top, rimi, lidl)}';
+    protected $signature = 'products:scrape {store?* : Only these stores (default: every enabled store)}';
 
     /**
      * @var string
      */
     protected $description = 'Scrape store prices and import them (runs daily from the scheduler)';
 
+    /**
+     * Scraper keys turned on in config('services.scraper.stores'), in SCRAPERS order.
+     *
+     * @return list<string>
+     */
+    public static function enabledStores(): array
+    {
+        return array_values(array_intersect(array_keys(self::SCRAPERS), config('services.scraper.stores')));
+    }
+
     public function handle(): int
     {
-        $stores = $this->argument('store') ?: array_keys(self::SCRAPERS);
-        $unknown = array_diff($stores, array_keys(self::SCRAPERS));
+        $enabled = self::enabledStores();
+        $stores = $this->argument('store') ?: $enabled;
+        $unknown = array_diff($stores, $enabled);
 
         if ($unknown !== []) {
-            $this->error('Unknown store: '.implode(', ', $unknown).'. Use: '.implode(', ', array_keys(self::SCRAPERS)));
+            $this->error('Unknown or disabled store: '.implode(', ', $unknown).'. Use: '.implode(', ', $enabled).' (enable more with SCRAPER_STORES).');
 
             return self::FAILURE;
         }

@@ -6,26 +6,40 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
 
-test('products:scrape runs every store scraper', function () {
+test('products:scrape runs every enabled store scraper', function () {
     config(['services.scraper.python' => 'py']);
     fakeScrapers();
 
     $this->artisan('products:scrape')->assertSuccessful();
 
-    Process::assertRanTimes(fn (PendingProcess $process) => $process->command[0] === 'py', 4);
+    Process::assertRanTimes(fn (PendingProcess $process) => $process->command[0] === 'py', 3);
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'maxima_scraper.py'));
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'top_scraper.py'));
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'rimi_scraper.py'));
+    Process::assertDidntRun(fn (PendingProcess $process) => str_ends_with($process->command[1], 'lidl_scraper.py'));
+});
+
+test('a disabled store is refused until it is enabled', function () {
+    fakeScrapers();
+
+    $this->artisan('products:scrape', ['store' => ['lidl']])
+        ->expectsOutputToContain('Unknown or disabled store: lidl')
+        ->assertFailed();
+    Process::assertNothingRan();
+
+    config(['services.scraper.stores' => ['maxima', 'top', 'rimi', 'lidl']]);
+
+    $this->artisan('products:scrape', ['store' => ['lidl']])->assertSuccessful();
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'lidl_scraper.py'));
 });
 
 test('products:scrape tells each scraper where to save and imports that file', function () {
     fakeScrapers();
 
-    $this->artisan('products:scrape', ['store' => ['rimi', 'lidl']])->assertSuccessful();
+    $this->artisan('products:scrape', ['store' => ['rimi', 'top']])->assertSuccessful();
 
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[2], 'rimi_products.csv'));
-    expect(Product::query()->orderBy('store')->pluck('store')->all())->toBe(['lidl.lv', 'rimi.lv']);
+    expect(Product::query()->orderBy('store')->pluck('store')->all())->toBe(['rimi.lv', 'top.lv']);
 });
 
 test('products:scrape can run a single store', function () {

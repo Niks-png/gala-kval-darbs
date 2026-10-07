@@ -26,17 +26,18 @@ test('the admin overview shows store stats and the last scrape of each store', f
     Product::query()->create(['title' => 'Piens', 'store' => 'rimi.lv', 'current_price' => 0.99, 'original_price' => '1.39']);
     Product::query()->create(['title' => 'Maize', 'store' => 'rimi.lv', 'current_price' => 1.19]);
     ScrapeRun::query()->create([
-        'store' => 'lidl', 'status' => ScrapeRun::STATUS_FAILED, 'exit_code' => 1,
-        'error' => 'Only 3 Lidl offers loaded', 'started_at' => now()->subMinutes(5), 'finished_at' => now(),
+        'store' => 'maxima', 'status' => ScrapeRun::STATUS_FAILED, 'exit_code' => 1,
+        'error' => 'Only 3 Maxima offers loaded', 'started_at' => now()->subMinutes(5), 'finished_at' => now(),
     ]);
 
     $this->actingAs(User::factory()->admin()->create())
         ->get(route('admin.index'))
         ->assertOk()
         ->assertSeeInOrder(['rimi.lv', '2', '1'])
-        ->assertSee('lidl.lv')
+        ->assertSee('maxima.lv')
+        ->assertDontSee('lidl.lv')
         ->assertSee('Neizdevās')
-        ->assertSee('Only 3 Lidl offers loaded');
+        ->assertSee('Only 3 Maxima offers loaded');
 });
 
 test('admins can queue a scrape for one store or all stores', function () {
