@@ -33,7 +33,7 @@ class SimilarProductFinder
             return collect();
         }
 
-        return Product::query()
+        return Product::query()->onOffer()
             ->whereNotNull('current_price')
             ->where('store', '!=', $product->store)
             ->when($product->category !== null && $product->category !== ProductCategorizer::OTHER,

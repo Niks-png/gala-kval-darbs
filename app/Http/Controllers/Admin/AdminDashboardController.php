@@ -12,8 +12,8 @@ use App\Models\ShoppingList;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -21,7 +21,7 @@ class AdminDashboardController extends Controller
 {
     public function index(): View
     {
-        $products = Product::query()
+        $products = Product::query()->onOffer()
             ->selectRaw('store, count(*) as products, sum(original_price is not null) as discounted, max(updated_at) as last_updated')
             ->groupBy('store')
             ->get()

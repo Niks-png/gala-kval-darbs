@@ -3,13 +3,29 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['title', 'store', 'category', 'description', 'price', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url'])]
+#[Fillable(['title', 'store', 'category', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url', 'offer_ended_at'])]
 class Product extends Model
 {
+    /**
+     * Products the store's latest scrape still had, i.e. offers that have not ended.
+     *
+     * @param  Builder<Product>  $query
+     */
+    public function scopeOnOffer(Builder $query): void
+    {
+        $query->whereNull('offer_ended_at');
+    }
+
+    public function offerHasEnded(): bool
+    {
+        return $this->offer_ended_at !== null;
+    }
+
     public function priceHistory(): HasMany
     {
         return $this->hasMany(ProductPriceHistory::class);
@@ -84,6 +100,7 @@ class Product extends Model
         return [
             'current_price' => 'decimal:2',
             'unit_price' => 'decimal:2',
+            'offer_ended_at' => 'datetime',
         ];
     }
 }

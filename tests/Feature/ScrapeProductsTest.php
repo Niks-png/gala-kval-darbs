@@ -1,12 +1,14 @@
 <?php
 
+use App\Models\Product;
+use App\Models\ScrapeRun;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
 
 test('products:scrape runs every store scraper', function () {
     config(['services.scraper.python' => 'py']);
-    Process::fake();
+    fakeScrapers();
 
     $this->artisan('products:scrape')->assertSuccessful();
 
@@ -17,8 +19,17 @@ test('products:scrape runs every store scraper', function () {
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'lidl_scraper.py'));
 });
 
+test('products:scrape tells each scraper where to save and imports that file', function () {
+    fakeScrapers();
+
+    $this->artisan('products:scrape', ['store' => ['rimi', 'lidl']])->assertSuccessful();
+
+    Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[2], 'rimi_products.csv'));
+    expect(Product::query()->orderBy('store')->pluck('store')->all())->toBe(['lidl.lv', 'rimi.lv']);
+});
+
 test('products:scrape can run a single store', function () {
-    Process::fake();
+    fakeScrapers();
 
     $this->artisan('products:scrape', ['store' => ['top']])->assertSuccessful();
 
@@ -27,16 +38,31 @@ test('products:scrape can run a single store', function () {
 });
 
 test('a failing scraper does not stop the others but fails the command', function () {
-    Process::fake([
-        '*maxima_scraper.py*' => Process::result(errorOutput: 'Chrome not found', exitCode: 1),
-        '*' => Process::result('Saved 10 top! products'),
-    ]);
+    fakeScrapers(['maxima' => 'Maxima site changed']);
 
     $this->artisan('products:scrape')
         ->expectsOutputToContain('Scraping maxima failed')
         ->assertFailed();
 
     Process::assertRan(fn (PendingProcess $process) => str_ends_with($process->command[1], 'top_scraper.py'));
+    expect(Product::query()->where('store', 'maxima.lv')->exists())->toBeFalse()
+        ->and(Product::query()->where('store', 'top.lv')->exists())->toBeTrue();
+});
+
+test('a CSV the import cannot read fails that store', function () {
+    config(['services.scraper.output_dir' => sys_get_temp_dir().DIRECTORY_SEPARATOR.'scrapers-'.uniqid()]);
+    Process::fake(function (PendingProcess $process) {
+        mkdir(dirname($process->command[2]), recursive: true);
+        file_put_contents($process->command[2], "title,price\nPiens,0.99\n");
+
+        return Process::result();
+    });
+
+    $this->artisan('products:scrape', ['store' => ['rimi']])->assertFailed();
+
+    expect(ScrapeRun::query()->sole())
+        ->status->toBe(ScrapeRun::STATUS_FAILED)
+        ->error->toContain('missing columns');
 });
 
 test('products:scrape rejects unknown stores', function () {

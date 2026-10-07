@@ -16,13 +16,17 @@ class ImportProductsCommand extends Command
      * @var string
      */
     protected $signature = 'products:import
-        {file=public/top_products.csv : The CSV file containing scraped products}
-        {--store= : Store name used when importing a legacy CSV without a store column}';
+        {file=scrapers/top_products.csv : The CSV file containing scraped products}';
+
+    /**
+     * Columns every scraper writes. image_url is optional.
+     */
+    private const REQUIRED_COLUMNS = ['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit'];
 
     /**
      * @var string
      */
-    protected $description = 'Import scraped products into the database';
+    protected $description = 'Import scraped products; the file is a store\'s full offer list, so its products missing from it are marked as ended';
 
     public function handle(ProductCategorizer $categorizer, PriceDropNotifier $notifier): int
     {
@@ -41,20 +45,14 @@ class ImportProductsCommand extends Command
         $file->setFlags(SplFileObject::READ_CSV | SplFileObject::SKIP_EMPTY);
 
         $header = $file->fgetcsv();
-        $hasStoreColumn = $header === ['title', 'store', 'original_price', 'current_price'];
-        $hasUnitColumns = $header === ['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit'];
-        $hasImageColumn = $header === ['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url'];
-        $legacyHeader = ['title', 'original_price', 'current_price'];
+        $missing = array_diff(self::REQUIRED_COLUMNS, is_array($header) ? $header : []);
 
-        if (! $hasStoreColumn && ! $hasUnitColumns && ! $hasImageColumn && $header !== $legacyHeader) {
-            throw new RuntimeException('The product CSV has an unsupported header.');
+        if ($missing !== []) {
+            throw new RuntimeException('The product CSV is missing columns: '.implode(', ', $missing).'.');
         }
 
-        $storeOption = trim((string) $this->option('store'));
-        if (! $hasStoreColumn && ! $hasUnitColumns && ! $hasImageColumn && $storeOption === '') {
-            throw new RuntimeException('The --store option is required when importing a legacy product CSV.');
-        }
-
+        // One timestamp for the whole file, so "not in this import" is "updated before it".
+        $importedAt = now();
         $products = [];
         while (! $file->eof()) {
             $row = $file->fgetcsv();
@@ -63,25 +61,10 @@ class ImportProductsCommand extends Command
                 continue;
             }
 
-            if ($hasImageColumn) {
-                [$title, $store, $originalPrice, $currentPrice, $unitPrice, $unit, $imageUrl] = array_pad($row, 7, null);
-            } elseif ($hasUnitColumns) {
-                [$title, $store, $originalPrice, $currentPrice, $unitPrice, $unit] = array_pad($row, 6, null);
-                $imageUrl = null;
-            } elseif ($hasStoreColumn) {
-                [$title, $store, $originalPrice, $currentPrice] = array_pad($row, 4, null);
-                $unitPrice = null;
-                $unit = null;
-                $imageUrl = null;
-            } else {
-                [$title, $originalPrice, $currentPrice] = array_pad($row, 3, null);
-                $store = $storeOption;
-                $unitPrice = null;
-                $unit = null;
-                $imageUrl = null;
-            }
-            $title = trim((string) $title);
-            $store = trim((string) $store);
+            // Column name => value, so the order of the CSV columns does not matter.
+            $values = array_combine($header, array_pad(array_slice($row, 0, count($header)), count($header), null));
+            $title = trim((string) $values['title']);
+            $store = trim((string) $values['store']);
 
             if ($title === '' || $store === '') {
                 continue;
@@ -91,14 +74,14 @@ class ImportProductsCommand extends Command
                 'title' => $title,
                 'store' => $store,
                 'category' => $categorizer->categorize($title),
-                'original_price' => $this->nullableValue($originalPrice),
-                'current_price' => $this->nullablePrice($currentPrice),
-                'price' => $this->nullablePrice($currentPrice) ?? '0.00',
-                'unit_price' => $this->nullablePrice($unitPrice),
-                'unit' => $this->nullableValue($unit),
-                'image_url' => $this->nullableValue($imageUrl),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'original_price' => $this->nullableValue($values['original_price']),
+                'current_price' => $this->nullablePrice($values['current_price']),
+                'unit_price' => $this->nullablePrice($values['unit_price']),
+                'unit' => $this->nullableValue($values['unit']),
+                'image_url' => $this->nullableValue($values['image_url'] ?? null),
+                'offer_ended_at' => null,
+                'created_at' => $importedAt,
+                'updated_at' => $importedAt,
             ];
         }
 
@@ -127,8 +110,18 @@ class ImportProductsCommand extends Command
             Product::upsert(
                 $products,
                 ['title', 'store'],
-                ['category', 'original_price', 'current_price', 'price', 'unit_price', 'unit', 'image_url', 'updated_at'],
+                ['category', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url', 'offer_ended_at', 'updated_at'],
             );
+
+            $ended = Product::query()
+                ->whereIn('store', array_unique(array_column($products, 'store')))
+                ->where('updated_at', '<', $importedAt)
+                ->onOffer()
+                ->update(['offer_ended_at' => $importedAt]);
+
+            if ($ended > 0) {
+                $this->info(sprintf('Marked %d products no longer on offer as ended.', $ended));
+            }
 
             if ($priceChanges !== []) {
                 ProductPriceHistory::insert($priceChanges);
@@ -147,7 +140,8 @@ class ImportProductsCommand extends Command
 
     private function nullableValue(?string $value): ?string
     {
-        $value = trim((string) $value);
+        // Also strip invisible zero-width characters, which shops sometimes put in empty price fields.
+        $value = (string) preg_replace('/^[\s\x{200B}-\x{200D}\x{FEFF}]+|[\s\x{200B}-\x{200D}\x{FEFF}]+$/u', '', (string) $value);
 
         return $value === '' || strtoupper($value) === 'N/A' ? null : $value;
     }
