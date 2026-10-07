@@ -1,10 +1,10 @@
-<x-layouts::auth :title="__('Email verification')">
+<x-layouts::auth :title="__('E-pasta apstiprināšana')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Verify your email')" :description="__('We sent a verification link to :email. Click the link in the email to continue.', ['email' => auth()->user()->email])" />
+        <x-auth-header :title="__('Apstiprini savu e-pastu')" :description="__('Mēs nosūtījām apstiprināšanas saiti uz :email. Atver e-pastu un noklikšķini uz saites, lai turpinātu.', ['email' => auth()->user()->email])" />
 
         @if (session('status') === 'verification-link-sent')
             <div class="text-center text-sm font-medium text-green-600">
-                {{ __('A new verification link has been sent to your email address.') }}
+                {{ __('Jauna apstiprināšanas saite nosūtīta uz tavu e-pastu.') }}
             </div>
         @endif
 
@@ -12,17 +12,17 @@
             @csrf
 
             <flux:button variant="primary" type="submit" class="w-full" data-test="resend-verification-button">
-                {{ __('Resend verification email') }}
+                {{ __('Nosūtīt saiti vēlreiz') }}
             </flux:button>
         </form>
 
         <div class="flex items-center justify-center gap-4 text-sm">
-            <flux:link :href="route('profile.edit')" wire:navigate>{{ __('Change email address') }}</flux:link>
+            <flux:link :href="route('profile.edit')" wire:navigate>{{ __('Mainīt e-pasta adresi') }}</flux:link>
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="cursor-pointer text-zinc-400 underline hover:text-zinc-600 dark:hover:text-zinc-200">
-                    {{ __('Log out') }}
+                    {{ __('Iziet') }}
                 </button>
             </form>
         </div>

@@ -49,7 +49,7 @@ new #[Title('Drošības iestatījumi')] class extends Component {
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        Flux::toast(variant: 'success', text: __('Password updated.'));
+        Flux::toast(variant: 'success', text: __('Parole atjaunināta.'));
     }
 
 
@@ -58,13 +58,13 @@ new #[Title('Drošības iestatījumi')] class extends Component {
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading level="2" class="sr-only">{{ __('Security settings') }}</flux:heading>
+    <flux:heading level="2" class="sr-only">{{ __('Drošības iestatījumi') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
+    <x-pages::settings.layout :heading="__('Mainīt paroli')" :subheading="__('Lai konts būtu drošs, izmanto garu un nejaušu paroli')">
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <flux:input
                 wire:model="current_password"
-                :label="__('Current password')"
+                :label="__('Pašreizējā parole')"
                 type="password"
                 required
                 autocomplete="current-password"
@@ -72,7 +72,7 @@ new #[Title('Drošības iestatījumi')] class extends Component {
             />
             <flux:input
                 wire:model="password"
-                :label="__('New password')"
+                :label="__('Jaunā parole')"
                 type="password"
                 required
                 autocomplete="new-password"
@@ -82,7 +82,7 @@ new #[Title('Drošības iestatījumi')] class extends Component {
 
             <x-password-requirements />            <flux:input
                 wire:model="password_confirmation"
-                :label="__('Confirm password')"
+                :label="__('Apstiprināt paroli')"
                 type="password"
                 required
                 autocomplete="new-password"
@@ -92,7 +92,7 @@ new #[Title('Drošības iestatījumi')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <flux:button variant="primary" type="submit" data-test="update-password-button">
-                    {{ __('Save') }}
+                    {{ __('Saglabāt') }}
                 </flux:button>
             </div>
         </form>

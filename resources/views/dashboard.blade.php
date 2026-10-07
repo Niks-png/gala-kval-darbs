@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Dashboard')">
+<x-layouts::app :title="__('Sākums')">
     <div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl">
         <div class="grid gap-4 md:grid-cols-3">
             <div class="rounded-xl border border-neutral-200 p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">

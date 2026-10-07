@@ -46,7 +46,7 @@
             <flux:spacer />
 
             <form method="GET" action="{{ request()->routeIs('dashboard') ? route('dashboard') : route('products.search') }}" class="block w-full max-w-md">
-                <label for="header-search" class="sr-only">{{ __('Search products') }}</label>
+                <label for="header-search" class="sr-only">{{ __('Meklēt produktus') }}</label>
                 <div class="relative">
                     <flux:icon.magnifying-glass class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
                     <input
@@ -54,7 +54,7 @@
                         type="search"
                         name="q"
                         value="{{ request('q') }}"
-                        placeholder="{{ __('Search products') }}"
+                        placeholder="{{ __('Meklēt produktus') }}"
                         class="w-full rounded-full border border-zinc-300 bg-white py-2 ps-9 pe-4 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
                     >
                 </div>
@@ -76,7 +76,7 @@
                     icon="shopping-cart"
                     :href="route('cart')"
                     :current="request()->routeIs('cart')"
-                    :label="__('Cart')"
+                    :label="__('Iepirkumu saraksts')"
                     wire:navigate
                 />
             </flux:navbar>
@@ -126,7 +126,7 @@
 
                     <flux:menu.radio.group>
                         <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
+                            {{ __('Iestatījumi') }}
                         </flux:menu.item>
                     </flux:menu.radio.group>
 
@@ -141,7 +141,7 @@
                             class="w-full cursor-pointer"
                             data-test="logout-button"
                         >
-                            {{ __('Log out') }}
+                            {{ __('Iziet') }}
                         </flux:menu.item>
                     </form>
                 </flux:menu>
