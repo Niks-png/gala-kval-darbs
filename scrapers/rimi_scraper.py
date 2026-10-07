@@ -10,7 +10,6 @@ URL = "https://www.rimi.lv/e-veikals/lv/akcijas-piedavajumi"
 PAGE_SIZE = 100  # the largest page size the site accepts
 MAX_PAGES = 100
 STORE = "rimi.lv"
-OUTPUT_FILE = output_path("rimi_products.csv")
 OFFER_SELECTOR = ".product-grid__item"
 # Fewer offers than this means the page did not load properly; keep the previous data instead.
 MIN_PRODUCTS = int(os.environ.get("RIMI_MIN_PRODUCTS", "500"))
@@ -53,18 +52,23 @@ def extract_product(item) -> dict[str, str]:
     return product_row(title, STORE, current_price, original_price, unit_price, unit, image_url)
 
 
-session = new_session()
+def main() -> None:
+    session = new_session()
 
-items = []
-for page in range(1, MAX_PAGES + 1):
-    response = session.get(URL, params={"pageSize": PAGE_SIZE, "currentPage": page}, timeout=60)
-    response.raise_for_status()
-    batch = BeautifulSoup(response.text, "html.parser").select(OFFER_SELECTOR)
-    items.extend(batch)
-    print(f"Fetched {len(items)} Rimi offers...", flush=True)
-    if len(batch) < PAGE_SIZE:
-        break
-    time.sleep(0.5)  # be gentle with the shop
+    items = []
+    for page in range(1, MAX_PAGES + 1):
+        response = session.get(URL, params={"pageSize": PAGE_SIZE, "currentPage": page}, timeout=60)
+        response.raise_for_status()
+        batch = BeautifulSoup(response.text, "html.parser").select(OFFER_SELECTOR)
+        items.extend(batch)
+        print(f"Fetched {len(items)} Rimi offers...", flush=True)
+        if len(batch) < PAGE_SIZE:
+            break
+        time.sleep(0.5)  # be gentle with the shop
 
-products = [extract_product(item) for item in items]
-save_products([product for product in products if product["current_price"]], OUTPUT_FILE, "Rimi", MIN_PRODUCTS)
+    products = [extract_product(item) for item in items]
+    save_products([product for product in products if product["current_price"]], output_path("rimi_products.csv"), "Rimi", MIN_PRODUCTS)
+
+
+if __name__ == "__main__":
+    main()

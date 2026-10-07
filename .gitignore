@@ -23,5 +23,5 @@ yarn-error.log
 /.vscode
 /.zed
 
-/scrapers/__pycache__
+__pycache__/
 /scrapers/*_products.csv

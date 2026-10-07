@@ -30,7 +30,6 @@ FOOD_CATEGORIES = {
     10071049: "Saldēti produkti",
 }
 STORE = "lidl.lv"
-OUTPUT_FILE = output_path("lidl_products.csv")
 # Fewer offers than this means the pages did not load properly; keep the previous data instead.
 MIN_PRODUCTS = int(os.environ.get("LIDL_MIN_PRODUCTS", "20"))
 
@@ -49,45 +48,49 @@ def extract_product(data: dict) -> dict[str, str]:
     return product_row(title, STORE, current_price, original_price, unit_price, unit, str(data.get("image") or ""))
 
 
-session = new_session()
-products = []
-
-
-def add_product(data: dict) -> None:
+def add_product(products: list[dict[str, str]], data: dict) -> None:
     product = extract_product(data)
     # Upcoming offers have no price yet; skip them until they start.
     if product["title"] and product["current_price"]:
         products.append(product)
 
 
-for url in OFFER_PAGES:
-    response = session.get(url, timeout=60)
-    response.raise_for_status()
+def main() -> None:
+    session = new_session()
+    products: list[dict[str, str]] = []
 
-    for element in BeautifulSoup(response.text, "html.parser").select("[data-grid-data]"):
-        try:
-            add_product(json.loads(element["data-grid-data"]))
-        except ValueError:
-            continue
+    for url in OFFER_PAGES:
+        response = session.get(url, timeout=60)
+        response.raise_for_status()
 
-    print(f"Fetched {len(products)} Lidl products...", flush=True)
+        for element in BeautifulSoup(response.text, "html.parser").select("[data-grid-data]"):
+            try:
+                add_product(products, json.loads(element["data-grid-data"]))
+            except ValueError:
+                continue
 
-for category_id, category_name in FOOD_CATEGORIES.items():
-    response = session.get(SEARCH_URL, timeout=60, params={
-        "category.id": category_id,
-        "offset": 0,
-        "fetchsize": 1000,
-        "locale": "lv_LV",
-        "assortment": "LV",
-        "version": "v2.0.0",
-    })
-    response.raise_for_status()
+        print(f"Fetched {len(products)} Lidl products...", flush=True)
 
-    for item in response.json().get("items", []):
-        data = (item.get("gridbox") or {}).get("data")
-        if data:
-            add_product(data)
+    for category_id, category_name in FOOD_CATEGORIES.items():
+        response = session.get(SEARCH_URL, timeout=60, params={
+            "category.id": category_id,
+            "offset": 0,
+            "fetchsize": 1000,
+            "locale": "lv_LV",
+            "assortment": "LV",
+            "version": "v2.0.0",
+        })
+        response.raise_for_status()
 
-    print(f"Fetched {len(products)} Lidl products (after {category_name})...", flush=True)
+        for item in response.json().get("items", []):
+            data = (item.get("gridbox") or {}).get("data")
+            if data:
+                add_product(products, data)
 
-save_products(products, OUTPUT_FILE, "Lidl", MIN_PRODUCTS)
+        print(f"Fetched {len(products)} Lidl products (after {category_name})...", flush=True)
+
+    save_products(products, output_path("lidl_products.csv"), "Lidl", MIN_PRODUCTS)
+
+
+if __name__ == "__main__":
+    main()

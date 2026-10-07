@@ -86,6 +86,9 @@ Each scraper saves the shop's current offers to `scrapers/<shop>_products.csv`, 
 
 ```bash
 php artisan test
+
+# The scrapers' parsing, on sample pages (no internet needed)
+python -m unittest discover -s scrapers/tests -t scrapers
 ```
 
 ## Production

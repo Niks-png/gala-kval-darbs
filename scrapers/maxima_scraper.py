@@ -14,7 +14,6 @@ LOAD_MORE_URL = "https://www.maxima.lv/ajax/salesloadmore"
 BATCH_SIZE = 100
 MAX_BATCHES = 50
 STORE = "maxima.lv"
-OUTPUT_FILE = output_path("maxima_products.csv")
 OFFER_SELECTOR = ".offer-item"
 # Fewer offers than this means the page did not load properly; keep the previous data instead.
 MIN_PRODUCTS = int(os.environ.get("MAXIMA_MIN_PRODUCTS", "100"))
@@ -56,15 +55,20 @@ def fetch_batch(session: requests.Session, offset: int) -> list:
     return BeautifulSoup(html, "html.parser").select(OFFER_SELECTOR)
 
 
-session = new_session({"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"})
-session.get(URL, timeout=60).raise_for_status()  # same session/cookies as a browser visit
+def main() -> None:
+    session = new_session({"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"})
+    session.get(URL, timeout=60).raise_for_status()  # same session/cookies as a browser visit
 
-items = []
-for _ in range(MAX_BATCHES):
-    batch = fetch_batch(session, len(items))
-    items.extend(batch)
-    print(f"Fetched {len(items)} Maxima offers...", flush=True)
-    if len(batch) < BATCH_SIZE:
-        break
+    items = []
+    for _ in range(MAX_BATCHES):
+        batch = fetch_batch(session, len(items))
+        items.extend(batch)
+        print(f"Fetched {len(items)} Maxima offers...", flush=True)
+        if len(batch) < BATCH_SIZE:
+            break
 
-save_products([extract_product(item) for item in items], OUTPUT_FILE, "Maxima", MIN_PRODUCTS)
+    save_products([extract_product(item) for item in items], output_path("maxima_products.csv"), "Maxima", MIN_PRODUCTS)
+
+
+if __name__ == "__main__":
+    main()
