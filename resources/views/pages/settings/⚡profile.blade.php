@@ -34,11 +34,18 @@ new #[Title('Profila iestatījumi')] class extends Component {
 
         $user->fill($validated);
 
-        if ($user->isDirty('email')) {
+        $emailChanged = $user->isDirty('email');
+
+        if ($emailChanged) {
             $user->email_verified_at = null;
         }
 
         $user->save();
+
+        // A changed address has to be confirmed again before the app can be used.
+        if ($emailChanged) {
+            $user->sendEmailVerificationNotification();
+        }
 
         Flux::toast(variant: 'success', text: __('Profile updated.'));
     }
