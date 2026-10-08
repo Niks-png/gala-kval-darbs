@@ -16,43 +16,85 @@ function historyList(User $user): array
     return [$list, $milk, $bread];
 }
 
-test('finishing a list saves the total of the whole list when nothing is ticked', function () {
+test('finishing a list counts only ticked items', function () {
+    $user = User::factory()->create();
+    [$list, $milk] = historyList($user);
+    $list->toggleProductChecked($milk->id, $user);
+
+    $this->actingAs($user)->post(route('cart.complete', $list))->assertRedirect(route('cart.show', $list));
+
+    expect($list->refresh()->isCompleted())->toBeTrue()
+        ->and($list->completed_total)->toBe('3.00');
+});
+
+test('a list with nothing ticked cannot be finished', function () {
     $user = User::factory()->create();
     [$list] = historyList($user);
 
     $this->actingAs($user)
         ->post(route('cart.complete', $list))
-        ->assertRedirect(route('cart.show', $list));
+        ->assertRedirect(route('cart.show', $list))
+        ->assertSessionHas('error', 'Atzīmē nopirktās preces, pirms pabeidz iepirkšanos.');
 
-    $list->refresh();
-    expect($list->isCompleted())->toBeTrue()
-        ->and($list->completed_total)->toBe('5.00');
+    expect($list->refresh()->isCompleted())->toBeFalse();
 });
 
-test('finishing a list counts only ticked items when some are ticked', function () {
+test('a finished list keeps the prices of the day it was finished', function () {
+    $user = User::factory()->create();
+    [$list, $milk, $bread] = historyList($user);
+    $list->toggleProductChecked($milk->id, $user);
+    $list->complete();
+
+    // The scraper changes the price the next day.
+    $milk->update(['current_price' => 2.99]);
+
+    $item = $list->products()->whereKey($milk->id)->sole();
+    expect(ShoppingList::itemPrice($item))->toBe(1.50)
+        ->and($list->refresh()->completed_total)->toBe('3.00');
+
+    $this->actingAs($user)->get(route('cart.show', $list))
+        ->assertSee('3,00 €')       // 2 × 1,50 € saved when finished
+        ->assertDontSee('5,98 €')   // not 2 × today's 2,99 €
+        ->assertSee('nav nopirkts'); // bread was not ticked
+});
+
+test('finished lists cannot be changed, reopened or finished again', function () {
+    $user = User::factory()->create();
+    [$list, $milk, $bread] = historyList($user);
+    $list->toggleProductChecked($milk->id, $user);
+    $list->complete();
+
+    $this->actingAs($user);
+    $this->post(route('cart.lists.items.store', [$list, $milk]))->assertForbidden();
+    $this->post(route('cart.lists.items.decrease', [$list, $milk]))->assertForbidden();
+    $this->post(route('cart.complete', $list))->assertRedirect(route('cart.show', $list));
+
+    // Even calls that skip the policy check change nothing once the list is finished.
+    expect($list->addProduct($bread->id))->toBeFalse()
+        ->and($list->decreaseProduct($milk->id))->toBeFalse()
+        ->and($list->removeProduct($milk->id))->toBeFalse()
+        ->and($list->toggleProductChecked($milk->id, $user))->toBeFalse()
+        ->and($list->complete())->toBeFalse()
+        ->and($list->products()->whereKey($milk->id)->sole()->pivot->quantity)->toBe(2)
+        ->and($list->refresh()->completed_total)->toBe('3.00');
+});
+
+test('"buy again" makes a new list with the same items and leaves the finished one alone', function () {
     $user = User::factory()->create();
     [$list, $milk] = historyList($user);
     $list->toggleProductChecked($milk->id, $user);
-
-    $this->actingAs($user)->post(route('cart.complete', $list));
-
-    expect($list->refresh()->completed_total)->toBe('3.00');
-});
-
-test('finished lists are read-only until reopened', function () {
-    $user = User::factory()->create();
-    [$list, $milk] = historyList($user);
     $list->complete();
 
-    $this->actingAs($user)
-        ->post(route('cart.lists.items.store', [$list, $milk]))
-        ->assertForbidden();
+    $response = $this->actingAs($user)->post(route('cart.copy', $list));
 
-    $this->delete(route('cart.reopen', $list))->assertRedirect(route('cart.show', $list));
+    $copy = ShoppingList::query()->latest('id')->first();
+    $response->assertRedirect(route('cart.show', $copy));
 
-    expect($list->refresh()->isCompleted())->toBeFalse();
-
-    $this->post(route('cart.lists.items.store', [$list, $milk]))->assertRedirect();
+    expect($copy->id)->not->toBe($list->id)
+        ->and($copy->isCompleted())->toBeFalse()
+        ->and($copy->products()->pluck('quantity', 'products.id')->all())->toBe($list->products()->pluck('quantity', 'products.id')->all())
+        ->and($copy->products()->wherePivotNotNull('checked_at')->count())->toBe(0)
+        ->and($list->refresh()->isCompleted())->toBeTrue();
 });
 
 test('viewers cannot finish a shared list', function () {
@@ -69,7 +111,9 @@ test('viewers cannot finish a shared list', function () {
 test('the lists page shows finished lists and monthly spending', function () {
     Carbon::setTestNow('2026-09-15 12:00:00');
     $user = User::factory()->create();
-    [$list] = historyList($user);
+    [$list, $milk, $bread] = historyList($user);
+    $list->toggleProductChecked($milk->id, $user);
+    $list->toggleProductChecked($bread->id, $user);
     $list->complete();
 
     $old = $user->shoppingLists()->create(['name' => 'Augusta iepirkumi']);

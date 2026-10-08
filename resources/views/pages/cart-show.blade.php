@@ -53,26 +53,26 @@
             @if (session('success'))
                 <flux:text class="mt-2 text-emerald-600 dark:text-emerald-400">{{ session('success') }}</flux:text>
             @endif
+            @if (session('error'))
+                <flux:text class="mt-2 text-amber-600 dark:text-amber-400" data-test="list-error">{{ session('error') }}</flux:text>
+            @endif
 
             @if ($list->isCompleted())
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
                     <flux:text>
-                        {{ __('Iepirkšanās pabeigta :date. Iztērēti :total €.', ['date' => $list->completed_at->format('d.m.Y'), 'total' => lv_number((float) $list->completed_total, 2)]) }}
+                        {{ __('Iepirkšanās pabeigta :date. Saraksts ir saglabāts vēsturē un vairs netiek mainīts.', ['date' => $list->completed_at->format('d.m.Y')]) }}
                     </flux:text>
-                    @if ($canEdit)
-                        <form method="POST" action="{{ route('cart.reopen', $list) }}">
-                            @csrf
-                            @method('DELETE')
-                            <flux:button type="submit" size="sm">{{ __('Atvērt no jauna') }}</flux:button>
-                        </form>
-                    @endif
+                    <form method="POST" action="{{ route('cart.copy', $list) }}">
+                        @csrf
+                        <flux:button type="submit" size="sm" icon="document-duplicate">{{ __('Pirkt vēlreiz') }}</flux:button>
+                    </form>
                 </div>
             @elseif ($canEdit && $list->products()->exists())
                 <form method="POST" action="{{ route('cart.complete', $list) }}" class="mt-4"
-                    onsubmit="return confirm('{{ __('Pabeigt iepirkšanos? Saraksts tiks saglabāts vēsturē.') }}')">
+                    onsubmit="return confirm('{{ __('Pabeigt iepirkšanos? Saraksts tiks saglabāts vēsturē un vairs nebūs maināms.') }}')">
                     @csrf
                     <flux:button type="submit" variant="primary" icon="check">{{ __('Pabeigt iepirkšanos') }}</flux:button>
-                    <flux:text class="mt-1 text-xs">{{ __('Ja preces ir atzīmētas kā nopirktas, tiks saskaitītas tikai tās.') }}</flux:text>
+                    <flux:text class="mt-1 text-xs">{{ __('Tiks saskaitītas tikai preces, kas atzīmētas kā nopirktas, pēc šī brīža veikala cenām.') }}</flux:text>
                 </form>
             @endif
 
@@ -140,6 +140,11 @@
                         </div>
                         <flux:text>
                             {{ __('Pievienojas kā: :role', ['role' => $roleLabels[$list->invite_role] ?? $list->invite_role]) }}
+                            @if ($list->invite_expires_at)
+                                · {{ $list->invite_expires_at->isPast()
+                                    ? __('Saite beidzās :date, izveido jaunu.', ['date' => $list->invite_expires_at->format('d.m.Y')])
+                                    : __('Derīga līdz :date', ['date' => $list->invite_expires_at->format('d.m.Y H:i')]) }}
+                            @endif
                         </flux:text>
                     @endif
 

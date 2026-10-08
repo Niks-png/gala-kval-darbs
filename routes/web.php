@@ -36,7 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('cart/{shoppingList}', [ShoppingListController::class, 'destroy'])->name('cart.destroy');
     Route::post('cart/{shoppingList}/activate', [ShoppingListController::class, 'activate'])->name('cart.activate');
     Route::post('cart/{shoppingList}/complete', [ShoppingListController::class, 'complete'])->name('cart.complete');
-    Route::delete('cart/{shoppingList}/complete', [ShoppingListController::class, 'reopen'])->name('cart.reopen');
+    Route::post('cart/{shoppingList}/copy', [ShoppingListController::class, 'copy'])->name('cart.copy');
     Route::post('products/{product}/watch', [ProductWatchController::class, 'store'])->name('products.watch');
     Route::delete('products/{product}/watch', [ProductWatchController::class, 'destroy'])->name('products.unwatch');
 
@@ -45,7 +45,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::post('invitations/{invitation}/accept', [ShoppingListInvitationController::class, 'accept'])->name('invitations.accept');
     Route::delete('invitations/{invitation}', [ShoppingListInvitationController::class, 'destroy'])->name('invitations.destroy');
-    Route::get('cart/join/{token}', [ShoppingListInviteController::class, 'accept'])->name('cart.invite.accept');
+    Route::get('cart/join/{token}', [ShoppingListInviteController::class, 'show'])->name('cart.invite.accept');
+    Route::post('cart/join/{token}', [ShoppingListInviteController::class, 'join'])->name('cart.invite.join');
     Route::post('cart/{shoppingList}/invite-link', [ShoppingListInviteController::class, 'store'])->name('cart.invite.store');
     Route::delete('cart/{shoppingList}/invite-link', [ShoppingListInviteController::class, 'destroy'])->name('cart.invite.destroy');
     Route::post('cart/{shoppingList}/members', [ShoppingListMemberController::class, 'store'])->name('cart.members.store');

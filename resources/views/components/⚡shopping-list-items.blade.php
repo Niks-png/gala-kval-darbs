@@ -48,7 +48,7 @@ new class extends Component {
     {
         Gate::authorize('editItems', $this->list);
 
-        $this->list->products()->detach($productId);
+        $this->list->removeProduct($productId);
     }
 
     #[Computed]
@@ -80,26 +80,33 @@ new class extends Component {
 
 @php
     $products = $this->products;
-    $lineTotal = fn ($product) => (float) $product->current_price * $product->pivot->quantity;
+    $completed = $this->list->isCompleted();
+    // A finished list shows the prices saved when it was finished, not today's.
+    $lineTotal = fn ($product) => (ShoppingList::itemPrice($product) ?? 0) * $product->pivot->quantity;
     $checkedCount = $products->whereNotNull('pivot.checked_at')->count();
     $total = $products->sum($lineTotal);
     $remaining = $products->whereNull('pivot.checked_at')->sum($lineTotal);
 @endphp
 
-<div wire:poll.3s>
+{{-- A finished list cannot change, so only an open one needs to watch for other members' edits. --}}
+<div @unless ($completed) wire:poll.3s @endunless>
     @if ($products->isEmpty())
         <flux:text class="mt-2">{{ __('Šis saraksts ir tukšs.') }}</flux:text>
     @else
         <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-neutral-50 px-4 py-3 text-sm dark:bg-neutral-800/60">
             <span>{{ __('Nopirkts :checked no :count', ['checked' => $checkedCount, 'count' => $products->count()]) }}</span>
-            <span class="flex flex-wrap gap-4">
-                <span>{{ __('Kopā:') }} <strong>{{ lv_number($total, 2) }} €</strong></span>
-                <span>{{ __('Vēl jāpērk:') }} <strong class="text-emerald-600 dark:text-emerald-400">{{ lv_number($remaining, 2) }} €</strong></span>
-            </span>
-            <span class="flex items-center gap-1.5 text-xs text-neutral-500" title="{{ __('Izmaiņas, ko veic citi dalībnieki, parādās automātiski') }}">
-                <span class="size-2 animate-pulse rounded-full bg-emerald-500"></span>
-                {{ __('Tiešsaistē') }}
-            </span>
+            @if ($completed)
+                <span>{{ __('Nopirkto preču summa pēc veikala cenām :date:', ['date' => $this->list->completed_at->format('d.m.Y')]) }} <strong>{{ lv_number((float) $this->list->completed_total, 2) }} €</strong></span>
+            @else
+                <span class="flex flex-wrap gap-4">
+                    <span>{{ __('Kopā:') }} <strong>{{ lv_number($total, 2) }} €</strong></span>
+                    <span>{{ __('Vēl jāpērk:') }} <strong class="text-emerald-600 dark:text-emerald-400">{{ lv_number($remaining, 2) }} €</strong></span>
+                </span>
+                <span class="flex items-center gap-1.5 text-xs text-neutral-500" title="{{ __('Izmaiņas, ko veic citi dalībnieki, parādās automātiski') }}">
+                    <span class="size-2 animate-pulse rounded-full bg-emerald-500"></span>
+                    {{ __('Tiešsaistē') }}
+                </span>
+            @endif
         </div>
 
         <div class="mt-3 space-y-3">
@@ -130,7 +137,7 @@ new class extends Component {
                             <flux:heading size="sm" @class(['line-through' => $checked])><a href="{{ route('products.show', $product) }}" wire:navigate class="hover:text-emerald-600">{{ $product->title }}</a></flux:heading>
                             <flux:text>
                                 {{ $product->store }}
-                                @if ($product->offerHasEnded() && ! $checked)
+                                @if ($product->offerHasEnded() && ! $checked && ! $completed)
                                     · <span class="text-amber-600 dark:text-amber-400">{{ __('piedāvājums beidzies') }}</span>
                                 @endif
                                 @if ($checked && isset($this->checkerNames[$product->pivot->checked_by]))
@@ -148,7 +155,11 @@ new class extends Component {
                             <button type="button" wire:click="increase({{ $product->id }})" class="flex size-8 items-center justify-center rounded-full border border-neutral-300 text-lg transition hover:border-emerald-500 hover:text-emerald-600 dark:border-neutral-600" aria-label="{{ __('Palielināt daudzumu') }}">+</button>
                         @endif
                         <flux:heading size="sm">
-                            {{ $product->current_price !== null ? lv_number($lineTotal($product), 2) . ' €' : '—' }}
+                            @if ($completed && ! $checked)
+                                <span class="text-sm font-normal text-neutral-500">{{ __('nav nopirkts') }}</span>
+                            @else
+                                {{ ShoppingList::itemPrice($product) !== null ? lv_number($lineTotal($product), 2) . ' €' : '—' }}
+                            @endif
                         </flux:heading>
                         @if ($this->canEdit)
                             <button type="button" wire:click="remove({{ $product->id }})" class="text-sm text-red-600 transition hover:text-red-700" aria-label="{{ __('Noņemt preci') }}">{{ __('Noņemt') }}</button>

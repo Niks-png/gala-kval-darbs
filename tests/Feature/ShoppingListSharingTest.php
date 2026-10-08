@@ -1,19 +1,7 @@
 <?php
 
-use App\Models\Product;
 use App\Models\ShoppingList;
 use App\Models\User;
-
-function sharedListSetup(string $role = ShoppingList::ROLE_EDITOR): array
-{
-    $owner = User::factory()->create();
-    $member = User::factory()->create();
-    $list = $owner->shoppingLists()->create(['name' => 'Kopīgais saraksts']);
-    $list->members()->attach($member->id, ['role' => $role]);
-    $product = Product::query()->create(['title' => 'Fresh Milk', 'store' => 'etop.lv', 'current_price' => 1.99]);
-
-    return [$owner, $member, $list, $product];
-}
 
 test('inviting by email sends an invitation the user can accept from notifications', function () {
     $owner = User::factory()->create(['name' => 'Anna']);
@@ -215,20 +203,57 @@ test('owner can create an invite link that lets users join with its role', funct
         ->assertOk()
         ->assertSee(route('cart.invite.accept', $list->invite_token));
 
+    // Opening the link only asks; it does not add anyone (link previews open links too).
     $this->actingAs($friend)
         ->get(route('cart.invite.accept', $list->invite_token))
-        ->assertRedirect(route('cart.show', $list));
+        ->assertOk()
+        ->assertSee('Pievienoties sarakstam "Kopīgais saraksts"?');
+
+    expect($list->roleFor($friend))->toBeNull();
+
+    $this->post(route('cart.invite.join', $list->invite_token))->assertRedirect(route('cart.show', $list));
 
     expect($list->roleFor($friend))->toBe('viewer');
 });
 
+test('invite links expire', function () {
+    [$owner, , $list] = sharedListSetup();
+    $stranger = User::factory()->create();
+
+    $this->actingAs($owner)->post(route('cart.invite.store', $list), ['role' => 'editor']);
+    $token = $list->refresh()->invite_token;
+
+    expect($list->invite_expires_at->isSameDay(now()->addDays(ShoppingList::INVITE_LINK_DAYS)))->toBeTrue();
+
+    $this->travel(ShoppingList::INVITE_LINK_DAYS + 1)->days();
+
+    $this->actingAs($stranger)->get(route('cart.invite.accept', $token))->assertNotFound();
+    $this->post(route('cart.invite.join', $token))->assertNotFound();
+
+    expect($list->roleFor($stranger))->toBeNull();
+});
+
+test('joining twice, e.g. from two tabs, adds the user once without an error', function () {
+    [$owner, , $list] = sharedListSetup();
+    $friend = User::factory()->create();
+    $list->forceFill(['invite_token' => 'abc123', 'invite_role' => 'editor', 'invite_expires_at' => now()->addDay()])->save();
+
+    // Both tabs loaded the page before either joined, then both press the button.
+    $list->addMember($friend, 'editor');
+    $list->addMember($friend, 'editor');
+    $this->actingAs($friend)->post(route('cart.invite.join', 'abc123'))->assertRedirect(route('cart.show', $list));
+
+    expect($list->members()->whereKey($friend->id)->count())->toBe(1);
+});
+
 test('joining through the link does not change an existing members role', function () {
     [$owner, $member, $list] = sharedListSetup(ShoppingList::ROLE_EDITOR);
-    $list->forceFill(['invite_token' => 'abc123', 'invite_role' => 'viewer'])->save();
+    $list->forceFill(['invite_token' => 'abc123', 'invite_role' => 'viewer', 'invite_expires_at' => now()->addDay()])->save();
 
     $this->actingAs($member)
         ->get(route('cart.invite.accept', 'abc123'))
         ->assertRedirect(route('cart.show', $list));
+    $this->post(route('cart.invite.join', 'abc123'))->assertRedirect(route('cart.show', $list));
 
     expect($list->roleFor($member))->toBe('editor')
         ->and($list->members()->count())->toBe(1);

@@ -87,7 +87,7 @@ test('the interface is in Latvian', function () {
 test('finished lists are not used as the active list', function () {
     $user = User::factory()->create();
     $done = $user->shoppingLists()->create(['name' => 'Vecais']);
-    $done->complete();
+    $done->forceFill(['completed_at' => now(), 'completed_total' => 0])->save();
     $milk = pageProduct('PIENS OPĀ 2.5% 1L', 'etop.lv', 0.99);
 
     $this->actingAs($user)->withSession(['active_shopping_list_id' => $done->id])

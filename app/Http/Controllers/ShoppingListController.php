@@ -4,19 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\ShoppingList;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class ShoppingListController extends Controller
 {
     public function index(Request $request): View
     {
         $user = $request->user();
-        $activeListId = $this->activeList($request)->id;
 
         $lists = $user->shoppingLists()
             ->open()
@@ -43,7 +46,8 @@ class ShoppingListController extends Controller
             'sharedLists' => $sharedLists,
             'completedLists' => $completedLists,
             'monthlySpending' => $this->monthlySpending($completedLists),
-            'activeListId' => $activeListId,
+            // Only looked up: viewing the page must not create a list.
+            'activeListId' => $this->findActiveList($request)?->id,
         ]);
     }
 
@@ -51,21 +55,33 @@ class ShoppingListController extends Controller
     {
         Gate::authorize('complete', $shoppingList);
 
-        if (! $shoppingList->isCompleted()) {
-            $shoppingList->complete();
+        if ($shoppingList->isCompleted()) {
+            return to_route('cart.show', $shoppingList);
+        }
+
+        if (! $shoppingList->complete()) {
+            // Either nothing was ticked, or another editor finished the list a moment ago.
+            return to_route('cart.show', $shoppingList)->with('error', $shoppingList->fresh()->isCompleted()
+                ? __('Šo sarakstu jau pabeidza cits dalībnieks.')
+                : __('Atzīmē nopirktās preces, pirms pabeidz iepirkšanos.'));
         }
 
         return to_route('cart.show', $shoppingList)
-            ->with('success', __('Iepirkšanās pabeigta. Iztērēti :total €', ['total' => lv_number((float) $shoppingList->completed_total, 2)]));
+            ->with('success', __('Iepirkšanās pabeigta. Nopirkto preču summa pēc veikala cenām: :total €', ['total' => lv_number((float) $shoppingList->completed_total, 2)]));
     }
 
-    public function reopen(ShoppingList $shoppingList): RedirectResponse
+    /**
+     * Buy the same things again: a new list with the finished list's items. The finished
+     * list is history and is never reopened or changed.
+     */
+    public function copy(Request $request, ShoppingList $shoppingList): RedirectResponse
     {
-        Gate::authorize('complete', $shoppingList);
+        Gate::authorize('view', $shoppingList);
 
-        $shoppingList->reopen();
+        $copy = $shoppingList->copyFor($request->user());
+        $request->session()->put('active_shopping_list_id', $copy->id);
 
-        return to_route('cart.show', $shoppingList)->with('success', __('Saraksts atvērts no jauna'));
+        return to_route('cart.show', $copy)->with('success', __('Izveidots jauns saraksts ar tām pašām precēm'));
     }
 
     /**
@@ -75,14 +91,17 @@ class ShoppingListController extends Controller
     {
         $validated = $request->validate([
             'shopping_list_id' => ['required', 'integer'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:99'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:'.ShoppingList::MAX_QUANTITY],
         ]);
 
         $list = ShoppingList::query()->findOrFail($validated['shopping_list_id']);
 
         Gate::authorize('editItems', $list);
 
-        $list->addProduct($product->id, (int) $validated['quantity']);
+        if (! $list->addProduct($product->id, (int) $validated['quantity'])) {
+            return back()->with('error', __('Saraksts jau ir pabeigts.'));
+        }
+
         $request->session()->put('active_shopping_list_id', $list->id);
 
         return back()->with('success', __('Produkts pievienots sarakstam ":list"', ['list' => $list->name]));
@@ -150,7 +169,7 @@ class ShoppingListController extends Controller
 
     public function quickAdd(Request $request, Product $product): RedirectResponse|JsonResponse
     {
-        $this->incrementItem($this->activeList($request), $product);
+        $this->addToActiveList($request, [$product->id]);
 
         if ($request->expectsJson()) {
             return response()->json(['message' => __('Produkts veiksmīgi pievienots iepirkuma sarakstam')]);
@@ -163,44 +182,36 @@ class ShoppingListController extends Controller
     {
         Gate::authorize('editItems', $shoppingList);
 
-        $this->incrementItem($shoppingList, $product);
-
-        return to_route('cart.show', $shoppingList);
+        return $this->afterItemChange($shoppingList, $shoppingList->addProduct($product->id));
     }
 
     public function decrease(Request $request, ShoppingList $shoppingList, Product $product): RedirectResponse
     {
         Gate::authorize('editItems', $shoppingList);
 
-        $shoppingList->decreaseProduct($product->id);
-
-        return to_route('cart.show', $shoppingList);
+        return $this->afterItemChange($shoppingList, $shoppingList->decreaseProduct($product->id));
     }
 
     public function destroyItem(Request $request, ShoppingList $shoppingList, Product $product): RedirectResponse
     {
         Gate::authorize('editItems', $shoppingList);
 
-        $shoppingList->products()->detach($product->id);
-
-        return to_route('cart.show', $shoppingList);
+        return $this->afterItemChange($shoppingList, $shoppingList->removeProduct($product->id));
     }
 
     /**
      * Add several products at once to the active list (used by the recipe page).
+     * All of them or none: a recipe should not end up half on the list.
      */
     public function storeMany(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'product_ids' => ['required', 'array', 'max:50'],
-            'product_ids.*' => ['integer', 'distinct', 'exists:products,id'],
+            // Must be a current offer with a price, not just any product that ever existed.
+            'product_ids.*' => ['integer', 'distinct', Rule::exists('products', 'id')->whereNull('offer_ended_at')->whereNotNull('current_price')],
         ]);
 
-        $list = $this->activeList($request);
-
-        foreach ($validated['product_ids'] as $productId) {
-            $list->addProduct((int) $productId);
-        }
+        $list = $this->addToActiveList($request, array_map('intval', $validated['product_ids']));
 
         return response()->json([
             'message' => trans_choice(
@@ -212,12 +223,44 @@ class ShoppingListController extends Controller
         ]);
     }
 
-    private function incrementItem(ShoppingList $list, Product $product): void
+    private function afterItemChange(ShoppingList $list, bool $changed): RedirectResponse
     {
-        $list->addProduct($product->id);
+        return $changed
+            ? to_route('cart.show', $list)
+            : to_route('cart.show', $list)->with('error', __('Saraksts jau ir pabeigts, to vairs nevar mainīt.'));
     }
 
-    private function activeList(Request $request): ShoppingList
+    /**
+     * Add products to the user's active list in one transaction, creating "Mans saraksts"
+     * only if the user has no list they can add to.
+     *
+     * @param  list<int>  $productIds
+     */
+    private function addToActiveList(Request $request, array $productIds): ShoppingList
+    {
+        return DB::transaction(function () use ($request, $productIds): ShoppingList {
+            // Lock the user's row so two requests at once cannot both create a default list.
+            User::query()->lockForUpdate()->find($request->user()->id);
+
+            $list = $this->findActiveList($request) ?? $request->user()->shoppingLists()->create(['name' => __('Mans saraksts')]);
+
+            foreach ($productIds as $productId) {
+                if (! $list->addProduct($productId)) {
+                    throw new RuntimeException("Shopping list {$list->id} was finished while products were being added.");
+                }
+            }
+
+            $request->session()->put('active_shopping_list_id', $list->id);
+
+            return $list;
+        });
+    }
+
+    /**
+     * The open list new products go to: the one chosen in this session, else the user's
+     * oldest own list, else the oldest shared list they may edit. Never creates one.
+     */
+    private function findActiveList(Request $request): ?ShoppingList
     {
         $user = $request->user();
         $activeId = $request->session()->get('active_shopping_list_id');
@@ -226,13 +269,9 @@ class ShoppingListController extends Controller
             ? ShoppingList::query()->editableBy($user)->open()->find($activeId)
             : null;
 
-        $list ??= $user->shoppingLists()->open()->orderBy('created_at')->first();
-
-        $list ??= $user->shoppingLists()->create(['name' => 'Mans saraksts']);
-
-        $request->session()->put('active_shopping_list_id', $list->id);
-
-        return $list;
+        return $list
+            ?? $user->shoppingLists()->open()->orderBy('created_at')->first()
+            ?? ShoppingList::query()->editableBy($user)->open()->orderBy('created_at')->first();
     }
 
     /**

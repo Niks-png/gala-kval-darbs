@@ -14,9 +14,8 @@ class ShoppingListInvitationController extends Controller
 
         $list = $invitation->shoppingList;
 
-        if ($list->roleFor($request->user()) === null) {
-            $list->members()->attach($invitation->user_id, ['role' => $invitation->role]);
-        }
+        // Safe if the same invitation is accepted in two tabs at once.
+        $list->addMember($request->user(), $invitation->role);
 
         $invitation->delete();
 

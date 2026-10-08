@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Product;
+use App\Models\ShoppingList;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
@@ -72,4 +75,20 @@ function fakeScrapers(array $failures = []): void
 
         return Process::result("Saved 1 {$store} products");
     });
+}
+
+/**
+ * A list owned by one user with a second user as $role, plus a product.
+ *
+ * @return array{0: User, 1: User, 2: ShoppingList, 3: Product}
+ */
+function sharedListSetup(string $role = ShoppingList::ROLE_EDITOR): array
+{
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $list = $owner->shoppingLists()->create(['name' => 'Kopīgais saraksts']);
+    $list->members()->attach($member->id, ['role' => $role]);
+    $product = Product::query()->create(['title' => 'Fresh Milk', 'store' => 'etop.lv', 'current_price' => 1.99]);
+
+    return [$owner, $member, $list, $product];
 }

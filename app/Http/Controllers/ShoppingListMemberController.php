@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ShoppingList;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -37,11 +38,16 @@ class ShoppingListMemberController extends Controller
             throw ValidationException::withMessages(['email' => __('Šim lietotājam jau ir nosūtīts uzaicinājums.')]);
         }
 
-        $shoppingList->invitations()->create([
-            'user_id' => $member->id,
-            'invited_by' => $request->user()->id,
-            'role' => $validated['role'],
-        ]);
+        try {
+            $shoppingList->invitations()->create([
+                'user_id' => $member->id,
+                'invited_by' => $request->user()->id,
+                'role' => $validated['role'],
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            // Another request invited the same person between the check above and this insert.
+            throw ValidationException::withMessages(['email' => __('Šim lietotājam jau ir nosūtīts uzaicinājums.')]);
+        }
 
         return back()->with('success', __('Uzaicinājums nosūtīts: :name', ['name' => $member->name]))->with('members_modal', true);
     }

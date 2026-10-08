@@ -3,6 +3,7 @@
 use App\Concerns\PasswordValidationRules;
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 new class extends Component {
@@ -19,7 +20,9 @@ new class extends Component {
             'password' => $this->currentPasswordRules(),
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        // Shared lists the user owns pass to another member before the account goes (User::booted).
+        $user = tap(Auth::user(), $logout(...));
+        DB::transaction(fn () => $user->delete());
 
         $this->redirect('/', navigate: true);
     }

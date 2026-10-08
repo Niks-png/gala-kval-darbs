@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -56,9 +57,36 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Lists are deleted with their owner (foreign key cascade), but a shared list belongs
+        // to its members too, so hand it over first. Covers both the user and an admin deleting.
+        static::deleting(fn (User $user) => $user->handOverSharedShoppingLists());
+    }
+
     public function shoppingLists(): HasMany
     {
         return $this->hasMany(ShoppingList::class);
+    }
+
+    /**
+     * Give each list this user owns to another member: the longest-standing editor, else the
+     * longest-standing viewer. Lists nobody else uses are left to be deleted with the user.
+     */
+    public function handOverSharedShoppingLists(): void
+    {
+        foreach ($this->shoppingLists()->has('members')->get() as $list) {
+            $heir = $list->members()
+                ->orderByRaw('CASE WHEN shopping_list_user.role = ? THEN 0 ELSE 1 END', [ShoppingList::ROLE_EDITOR])
+                ->orderBy('shopping_list_user.created_at')
+                ->first();
+
+            DB::transaction(function () use ($list, $heir): void {
+                $list->forceFill(['user_id' => $heir->id])->save();
+                // The new owner is not also a member.
+                $list->members()->detach($heir->id);
+            });
+        }
     }
 
     public function shoppingListInvitations(): HasMany

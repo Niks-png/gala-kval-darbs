@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AdminUserController extends Controller
@@ -48,8 +49,10 @@ class AdminUserController extends Controller
     {
         abort_if($user->is($request->user()), 403);
 
-        // Their lists, memberships, invitations and follows are removed by cascading foreign keys.
-        $user->delete();
+        // Shared lists they own pass to another member first (User::booted); the rest of their
+        // lists, memberships, invitations and follows are removed by cascading foreign keys.
+        // One transaction, so a failure cannot leave lists handed over but the user still there.
+        DB::transaction(fn () => $user->delete());
 
         return back()->with('success', __('Lietotājs :name dzēsts.', ['name' => $user->name]));
     }
