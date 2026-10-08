@@ -14,6 +14,9 @@
             </div>
         </div>
 
+        @if (session('error'))
+            <flux:text class="text-amber-600 dark:text-amber-400" data-test="admin-error">{{ session('error') }}</flux:text>
+        @endif
         @if (session('success'))
             <flux:text class="text-emerald-600 dark:text-emerald-400">{{ session('success') }}</flux:text>
         @endif

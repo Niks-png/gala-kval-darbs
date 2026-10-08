@@ -106,7 +106,7 @@ test('a drop that is not the 30 day low is not flagged as one', function () {
     $follower = User::factory()->create();
     $product = Product::query()->create(['title' => 'Olas', 'store' => 'Rimi', 'current_price' => 1.99]);
     $follower->watchedProducts()->attach($product);
-    ProductPriceHistory::query()->create(['product_id' => $product->id, 'previous_price' => 2.19, 'new_price' => 1.79]);
+    ProductPriceHistory::query()->create(['product_id' => $product->id, 'previous_price' => 2.19, 'new_price' => 1.79])->forceFill(['alerts_sent_at' => now()])->save();
     ProductPriceHistory::query()->create(['product_id' => $product->id, 'previous_price' => 1.79, 'new_price' => 2.29]);
     $product->update(['current_price' => 2.29]);
 
@@ -115,16 +115,45 @@ test('a drop that is not the 30 day low is not flagged as one', function () {
     expect($follower->notifications()->first()->data['lowest_30_days'])->toBeFalse();
 });
 
-test('the notifier skips products nobody follows', function () {
+test('a drop nobody follows is marked as handled without sending anything', function () {
     Notification::fake();
     $product = Product::query()->create(['title' => 'Siers', 'store' => 'Rimi', 'current_price' => 2.00]);
+    $drop = ProductPriceHistory::query()->create(['product_id' => $product->id, 'previous_price' => 2.50, 'new_price' => 2.00]);
 
-    $sent = app(PriceDropNotifier::class)->notify([
-        ['product_id' => $product->id, 'previous_price' => 2.50, 'new_price' => 2.00],
-    ]);
-
-    expect($sent)->toBe(0);
+    expect(app(PriceDropNotifier::class)->sendPending())->toBe(0);
     Notification::assertNothingSent();
+    expect($drop->fresh()->alerts_sent_at)->not->toBeNull();
+});
+
+test('each price drop is announced exactly once', function () {
+    $follower = User::factory()->create();
+    $product = Product::query()->create(['title' => 'Piens', 'store' => 'Rimi', 'current_price' => 1.39]);
+    $follower->watchedProducts()->attach($product);
+
+    importCsv("Piens,Rimi,,1.19,,\n");
+    app(PriceDropNotifier::class)->sendPending();
+    importCsv("Piens,Rimi,,1.19,,\n");
+
+    expect($follower->notifications()->count())->toBe(1);
+});
+
+test('alerts that fail to send do not undo the import and go out with the next import', function () {
+    $follower = User::factory()->create();
+    $product = Product::query()->create(['title' => 'Piens', 'store' => 'Rimi', 'current_price' => 1.39]);
+    $follower->watchedProducts()->attach($product);
+
+    $this->mock(PriceDropNotifier::class)->shouldReceive('sendPending')->andThrow(new RuntimeException('mail server down'));
+    importCsv("Piens,Rimi,,1.19,,\n");
+
+    expect($product->fresh()->current_price)->toBe('1.19')
+        ->and($product->priceHistory()->sole()->alerts_sent_at)->toBeNull()
+        ->and($follower->notifications()->count())->toBe(0);
+
+    $this->app->forgetInstance(PriceDropNotifier::class);
+    $this->app->offsetUnset(PriceDropNotifier::class);
+    importCsv("Piens,Rimi,,1.19,,\n");
+
+    expect($follower->notifications()->count())->toBe(1);
 });
 
 test('notifications page shows alerts, marks them read and counts them in the badge', function () {

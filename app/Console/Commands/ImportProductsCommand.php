@@ -6,9 +6,12 @@ use App\Models\Product;
 use App\Models\ProductPriceHistory;
 use App\Services\PriceDropNotifier;
 use App\Services\ProductCategorizer;
+use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use SplFileObject;
+use Throwable;
 
 class ImportProductsCommand extends Command
 {
@@ -16,7 +19,8 @@ class ImportProductsCommand extends Command
      * @var string
      */
     protected $signature = 'products:import
-        {file=scrapers/top_products.csv : The CSV file containing scraped products}';
+        {file=scrapers/top_products.csv : The CSV file containing scraped products}
+        {--force : Import even if a store has far fewer products than it has on offer now}';
 
     /**
      * Columns every scraper writes. image_url is optional.
@@ -85,27 +89,18 @@ class ImportProductsCommand extends Command
             ];
         }
 
-        if ($products !== []) {
-            $existingProducts = Product::query()
-                ->whereIn('title', array_column($products, 'title'))
-                ->get()
-                ->keyBy(fn (Product $product): string => $product->title.'|'.$product->store);
+        if ($products === []) {
+            throw new RuntimeException('The product file has no products; nothing was imported.');
+        }
 
-            $priceChanges = [];
-            foreach ($products as $product) {
-                $existing = $existingProducts->get($product['title'].'|'.$product['store']);
-                if ($existing?->current_price !== null
-                    && $product['current_price'] !== null
-                    && (float) $existing->current_price !== (float) $product['current_price']) {
-                    $priceChanges[] = [
-                        'product_id' => $existing->id,
-                        'previous_price' => $existing->current_price,
-                        'new_price' => $product['current_price'],
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
-            }
+        if (! $this->option('force') && ($problem = $this->incompleteStore($products)) !== null) {
+            throw new RuntimeException($problem.' Nothing was imported. If the shop really has this few offers, run again with --force.');
+        }
+
+        // Prices, ended offers and price history change together or not at all.
+        $ended = DB::transaction(function () use ($products, $importedAt): int {
+            // Compared with the prices before this import, so it must be worked out first.
+            $priceChanges = $this->priceChanges($products, $importedAt);
 
             Product::upsert(
                 $products,
@@ -119,23 +114,88 @@ class ImportProductsCommand extends Command
                 ->onOffer()
                 ->update(['offer_ended_at' => $importedAt]);
 
-            if ($ended > 0) {
-                $this->info(sprintf('Marked %d products no longer on offer as ended.', $ended));
-            }
-
             if ($priceChanges !== []) {
                 ProductPriceHistory::insert($priceChanges);
-
-                $alerts = $notifier->notify($priceChanges);
-                if ($alerts > 0) {
-                    $this->info(sprintf('Sent %d price drop alerts.', $alerts));
-                }
             }
+
+            return $ended;
+        });
+
+        if ($ended > 0) {
+            $this->info(sprintf('Marked %d products no longer on offer as ended.', $ended));
         }
 
         $this->info(sprintf('Imported %d products.', count($products)));
 
+        // Only after the prices are committed. A failure here must not undo the import;
+        // the unsent drops stay pending and go out with the next import.
+        try {
+            $alerts = $notifier->sendPending();
+
+            if ($alerts > 0) {
+                $this->info(sprintf('Sent %d price drop alerts.', $alerts));
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->warn('Price drop alerts could not be sent; they will be sent with the next import.');
+        }
+
         return self::SUCCESS;
+    }
+
+    /**
+     * A scraper that silently loads only part of a shop would otherwise mark the rest as ended.
+     * So a store whose file has far fewer products than it has on offer now is refused.
+     *
+     * @param  list<array<string, mixed>>  $products
+     */
+    private function incompleteStore(array $products): ?string
+    {
+        $ratio = (float) config('services.scraper.min_import_ratio');
+        $counts = array_count_values(array_column($products, 'store'));
+
+        foreach ($counts as $store => $count) {
+            $onOffer = Product::query()->where('store', $store)->onOffer()->count();
+
+            // Tiny stores swing too much week to week to judge.
+            if ($onOffer >= 20 && $count < $onOffer * $ratio) {
+                return sprintf('The file has %d %s products, but %d are on offer now (minimum %d%%).', $count, $store, $onOffer, $ratio * 100);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * A price history row for each product whose price is about to change.
+     *
+     * @param  list<array<string, mixed>>  $products
+     * @return list<array<string, mixed>>
+     */
+    private function priceChanges(array $products, CarbonInterface $importedAt): array
+    {
+        $existingProducts = Product::query()
+            ->whereIn('title', array_column($products, 'title'))
+            ->get()
+            ->keyBy(fn (Product $product): string => $product->title.'|'.$product->store);
+
+        $priceChanges = [];
+        foreach ($products as $product) {
+            $existing = $existingProducts->get($product['title'].'|'.$product['store']);
+            if ($existing?->current_price !== null
+                && $product['current_price'] !== null
+                && (float) $existing->current_price !== (float) $product['current_price']) {
+                $priceChanges[] = [
+                    'product_id' => $existing->id,
+                    'previous_price' => $existing->current_price,
+                    'new_price' => $product['current_price'],
+                    'created_at' => $importedAt,
+                    'updated_at' => $importedAt,
+                ];
+            }
+        }
+
+        return $priceChanges;
     }
 
     private function nullableValue(?string $value): ?string

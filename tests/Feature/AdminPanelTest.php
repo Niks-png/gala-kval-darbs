@@ -54,6 +54,21 @@ test('admins can queue a scrape for one store or all stores', function () {
     Queue::assertPushedTimes(RunScrape::class, 2);
 });
 
+test('a second update is refused while one is running, unless that run crashed long ago', function () {
+    Queue::fake();
+    $this->actingAs(User::factory()->admin()->create());
+    $run = ScrapeRun::query()->create(['store' => 'rimi', 'status' => ScrapeRun::STATUS_RUNNING, 'started_at' => now()->subMinutes(5)]);
+
+    $this->post(route('admin.scrape'))->assertSessionHas('error');
+    Queue::assertNothingPushed();
+
+    // Older than the scrape timeout: the process died, so it must not block updates forever.
+    $run->update(['started_at' => now()->subHours(3)]);
+
+    $this->post(route('admin.scrape'))->assertSessionHas('success');
+    Queue::assertPushed(RunScrape::class);
+});
+
 test('products:scrape records each store run for the admin panel', function () {
     fakeScrapers(['maxima' => 'Maxima site changed']);
 

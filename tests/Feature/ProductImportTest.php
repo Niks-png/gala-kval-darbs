@@ -2,6 +2,8 @@
 
 use App\Models\Product;
 use App\Models\ProductPriceHistory;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 
 test('scraped products are imported and existing products are updated', function () {
     $csvPath = tempnam(sys_get_temp_dir(), 'products-');
@@ -181,4 +183,57 @@ test('an ended offer that comes back is on offer again', function () {
     expect(Product::query()->where('title', 'Bread')->sole())
         ->offerHasEnded()->toBeFalse()
         ->current_price->toBe('1.19');
+});
+
+test('a file with far fewer products than the store has on offer is refused and changes nothing', function () {
+    foreach (range(1, 30) as $i) {
+        Product::query()->create(['title' => "Prece {$i}", 'store' => 'rimi.lv', 'current_price' => 1.00]);
+    }
+    $csvPath = tempnam(sys_get_temp_dir(), 'products-');
+    file_put_contents($csvPath, "title,store,original_price,current_price,unit_price,unit\nPrece 1,rimi.lv,,0.50,,\n");
+
+    expect(fn () => $this->artisan('products:import', ['file' => $csvPath])->run())
+        ->toThrow(RuntimeException::class, 'The file has 1 rimi.lv products, but 30 are on offer now');
+
+    expect(Product::query()->onOffer()->count())->toBe(30)
+        ->and(Product::query()->where('title', 'Prece 1')->sole()->current_price)->toBe('1.00')
+        ->and(ProductPriceHistory::query()->count())->toBe(0);
+
+    // A real drop in offers can still be imported on purpose.
+    $this->travel(1)->day();
+    $this->artisan('products:import', ['file' => $csvPath, '--force' => true])->assertSuccessful();
+
+    expect(Product::query()->onOffer()->count())->toBe(1);
+
+    unlink($csvPath);
+});
+
+test('a failure halfway through the import leaves prices, ended offers and history untouched', function () {
+    importCsv("Piens,rimi.lv,,1.39,,\nMaize,rimi.lv,,0.99,,");
+    $this->travel(1)->day();
+
+    // Make saving the price history fail after the import has started.
+    Schema::rename('product_price_histories', 'product_price_histories_gone');
+
+    $csvPath = tempnam(sys_get_temp_dir(), 'products-');
+    file_put_contents($csvPath, "title,store,original_price,current_price,unit_price,unit\nPiens,rimi.lv,,1.19,,\n");
+
+    expect(fn () => $this->artisan('products:import', ['file' => $csvPath, '--force' => true])->run())->toThrow(QueryException::class);
+
+    Schema::rename('product_price_histories_gone', 'product_price_histories');
+
+    expect(Product::query()->where('title', 'Piens')->sole()->current_price)->toBe('1.39')
+        ->and(Product::query()->where('title', 'Maize')->sole()->offerHasEnded())->toBeFalse();
+
+    unlink($csvPath);
+});
+
+test('an empty product file is refused', function () {
+    $csvPath = tempnam(sys_get_temp_dir(), 'products-');
+    file_put_contents($csvPath, "title,store,original_price,current_price,unit_price,unit\n");
+
+    expect(fn () => $this->artisan('products:import', ['file' => $csvPath])->run())
+        ->toThrow(RuntimeException::class, 'The product file has no products');
+
+    unlink($csvPath);
 });

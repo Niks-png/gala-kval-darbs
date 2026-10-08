@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\ScrapeRun;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use Throwable;
@@ -66,45 +67,78 @@ class ScrapeProductsCommand extends Command
 
         // One failing store must not stop the others from updating.
         foreach ($stores as $store) {
-            $this->info("Scraping {$store}...");
-            $run = ScrapeRun::query()->create([
-                'store' => $store,
-                'status' => ScrapeRun::STATUS_RUNNING,
-                'started_at' => now(),
-            ]);
+            // One update per store at a time, whether the scheduler or the admin panel started it.
+            $lock = Cache::lock("products-scrape:{$store}", (int) config('services.scraper.timeout') + 300);
 
-            $csvPath = $this->csvPath($store);
-            [$exitCode, $error] = $this->scrape($store, $csvPath);
+            if (! $lock->get()) {
+                $failed[] = $store;
+                $this->error("Skipped {$store}: another price update of this store is still running.");
 
-            if ($exitCode === 0) {
-                [$exitCode, $error] = $this->import($csvPath);
-            }
-
-            $run->update([
-                'status' => $exitCode === 0 ? ScrapeRun::STATUS_SUCCESS : ScrapeRun::STATUS_FAILED,
-                'exit_code' => $exitCode,
-                'error' => $error,
-                'finished_at' => now(),
-            ]);
-
-            if ($exitCode === 0) {
                 continue;
             }
 
-            $failed[] = $store;
-            $this->error("Scraping {$store} failed (exit code {$exitCode}).");
-            Log::error("products:scrape failed for {$store}", [
-                'exit_code' => $exitCode,
-                'error' => $error,
-            ]);
+            try {
+                if (! $this->updateStore($store)) {
+                    $failed[] = $store;
+                }
+            } finally {
+                $lock->release();
+            }
         }
 
         return $failed === [] ? self::SUCCESS : self::FAILURE;
     }
 
-    private function csvPath(string $store): string
+    /**
+     * Scrape one store and import the result, recording the run for the admin panel.
+     */
+    private function updateStore(string $store): bool
     {
-        return rtrim(config('services.scraper.output_dir'), '\\/').DIRECTORY_SEPARATOR."{$store}_products.csv";
+        $this->info("Scraping {$store}...");
+        $run = ScrapeRun::query()->create([
+            'store' => $store,
+            'status' => ScrapeRun::STATUS_RUNNING,
+            'started_at' => now(),
+        ]);
+
+        // A file of its own, so no other run can overwrite it before it is imported.
+        $csvPath = $this->csvPath($store, $run->id);
+
+        try {
+            [$exitCode, $error] = $this->scrape($store, $csvPath);
+
+            if ($exitCode === 0) {
+                [$exitCode, $error] = $this->import($csvPath);
+            }
+        } finally {
+            if (is_file($csvPath)) {
+                unlink($csvPath);
+            }
+        }
+
+        $run->update([
+            'status' => $exitCode === 0 ? ScrapeRun::STATUS_SUCCESS : ScrapeRun::STATUS_FAILED,
+            'exit_code' => $exitCode,
+            'error' => $error,
+            'finished_at' => now(),
+        ]);
+
+        if ($exitCode === 0) {
+            return true;
+        }
+
+        $this->error("Scraping {$store} failed (exit code {$exitCode}).");
+        Log::error("products:scrape failed for {$store}", [
+            'exit_code' => $exitCode,
+            'error' => $error,
+        ]);
+
+        return false;
+    }
+
+    private function csvPath(string $store, int $runId): string
+    {
+        return rtrim(config('services.scraper.output_dir'), '\\/').DIRECTORY_SEPARATOR."{$store}_products_{$runId}.csv";
     }
 
     /**
@@ -134,6 +168,7 @@ class ScrapeProductsCommand extends Command
         try {
             $exitCode = $this->call('products:import', ['file' => $csvPath]);
         } catch (Throwable $exception) {
+            // E.g. the file has far fewer products than the store has on offer now.
             return [self::FAILURE, 'Import failed: '.$exception->getMessage()];
         }
 

@@ -80,7 +80,14 @@ php artisan products:scrape            # every shop
 php artisan products:scrape rimi top   # only these shops
 ```
 
-Each scraper saves the shop's current offers to `scrapers/<shop>_products.csv`, and the command imports it. Products that are no longer in a shop's offers are marked as ended and hidden from product lists. If a shop's site fails and too few offers load, nothing is imported and the previous prices are kept. Every run is shown in the admin panel.
+Each run saves the shop's current offers to its own file in `storage/app/scrapes/`, imports it and deletes it. Products that are no longer in a shop's offers are marked as ended and hidden from product lists. Every run is shown in the admin panel.
+
+Safeguards, so a broken shop site or a double click cannot damage good data:
+
+- **Incomplete results are refused.** If a scraper loads too few offers, or a file has less than half of the products the shop has on offer now (`SCRAPER_MIN_IMPORT_RATIO`), nothing is imported and the previous prices stay. If a shop really did shrink its offers, import by hand with `php artisan products:import <file> --force`.
+- **All or nothing.** New prices, ended offers and price history are saved in one database transaction.
+- **One update per shop at a time.** A shop that is already being updated (by the schedule or the admin panel) is skipped, and the admin panel will not queue a second update while one is waiting or running.
+- **Price drop alerts are sent exactly once,** after the prices are saved. If sending fails, the import still counts and the alerts go out with the next import.
 
 Which shops are scraped is set by `SCRAPER_STORES` (default `maxima,top,rimi`). A Lidl scraper exists but is off: lidl.lv currently publishes its offers only as leaflet images, not as product listings, so it finds almost nothing. Add `lidl` to `SCRAPER_STORES` to try it again.
 

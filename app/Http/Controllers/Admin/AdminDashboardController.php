@@ -67,6 +67,17 @@ class AdminDashboardController extends Controller
             'store' => ['nullable', Rule::in(ScrapeProductsCommand::enabledStores())],
         ]);
 
+        // Starting another update while one is waiting or running would only queue duplicate work.
+        // A "running" run older than the scrape timeout crashed, so it must not block new updates.
+        $running = ScrapeRun::query()
+            ->where('status', ScrapeRun::STATUS_RUNNING)
+            ->where('started_at', '>=', now()->subSeconds((int) config('services.scraper.timeout') + 300))
+            ->exists();
+
+        if ($this->pendingScrapes() > 0 || $running) {
+            return back()->with('error', __('Cenu atjaunošana jau notiek vai gaida rindā. Pagaidi, līdz tā beidzas.'));
+        }
+
         RunScrape::dispatch(isset($validated['store']) ? [$validated['store']] : []);
 
         return back()->with('success', isset($validated['store'])

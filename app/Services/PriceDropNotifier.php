@@ -2,49 +2,56 @@
 
 namespace App\Services;
 
-use App\Models\Product;
+use App\Models\ProductPriceHistory;
 use App\Notifications\PriceDropped;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 class PriceDropNotifier
 {
     /**
-     * Notify followers of every product whose price went down.
-     * Call after the new prices and history rows are saved.
+     * Tell followers about every recorded price drop not announced yet.
      *
-     * @param  iterable<array{product_id: int, previous_price: mixed, new_price: mixed}>  $changes
+     * Works from the saved price history, not from an import in progress, so it
+     * runs only after the new prices are committed. Each drop is sent and marked
+     * as sent in one transaction, so it is announced exactly once; if sending
+     * fails, the drop stays unsent and the next call tries again.
+     *
      * @return int Number of notifications sent
      */
-    public function notify(iterable $changes): int
+    public function sendPending(): int
     {
-        $drops = collect($changes)
-            ->filter(fn (array $change) => (float) $change['previous_price'] > 0
-                && (float) $change['new_price'] < (float) $change['previous_price'])
-            ->keyBy('product_id');
-
-        if ($drops->isEmpty()) {
-            return 0;
-        }
-
-        $products = Product::query()
-            ->whereKey($drops->keys())
-            ->whereHas('watchers')
-            ->with(['watchers', 'priceHistory'])
-            ->get();
-
         $sent = 0;
 
-        foreach ($products as $product) {
-            $change = $drops->get($product->id);
+        $drops = ProductPriceHistory::query()
+            ->whereNull('alerts_sent_at')
+            ->where('previous_price', '>', 0)
+            ->whereColumn('new_price', '<', 'previous_price')
+            ->with([
+                'product.watchers',
+                // Only the window isLowestPriceInDays() looks at, not the whole history.
+                'product.priceHistory' => fn ($query) => $query->where('created_at', '>=', now()->subDays(30)),
+            ])
+            ->orderBy('id')
+            ->get();
 
-            Notification::send($product->watchers, new PriceDropped(
-                $product,
-                (float) $change['previous_price'],
-                (float) $change['new_price'],
-                $product->isLowestPriceInDays(30),
-            ));
+        foreach ($drops as $drop) {
+            DB::transaction(function () use ($drop, &$sent): void {
+                $product = $drop->product;
 
-            $sent += $product->watchers->count();
+                if ($product->watchers->isNotEmpty()) {
+                    Notification::send($product->watchers, new PriceDropped(
+                        $product,
+                        (float) $drop->previous_price,
+                        (float) $drop->new_price,
+                        $product->isLowestPriceInDays(30),
+                    ));
+
+                    $sent += $product->watchers->count();
+                }
+
+                $drop->forceFill(['alerts_sent_at' => now()])->save();
+            });
         }
 
         return $sent;
