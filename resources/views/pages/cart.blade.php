@@ -27,8 +27,8 @@
             <div class="mt-2 space-y-3">
                 @foreach ($lists as $list)
                     @php
-                        $itemCount = $list->products->sum('pivot.quantity');
-                        $total = $list->products->sum(fn ($product) => (float) ($product->current_price ?? 0) * $product->pivot->quantity);
+                        $itemCount = (int) $list->item_count;
+                        $total = (float) $list->items_total;
                         $isActive = $list->id === $activeListId;
                     @endphp
                     <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 shadow-sm transition hover:shadow-md dark:border-neutral-700 {{ $isActive ? 'border-emerald-500' : 'border-neutral-200' }}">
@@ -83,8 +83,8 @@
             <div class="space-y-3">
                 @foreach ($sharedLists as $list)
                     @php
-                        $itemCount = $list->products->sum('pivot.quantity');
-                        $total = $list->products->sum(fn ($product) => (float) ($product->current_price ?? 0) * $product->pivot->quantity);
+                        $itemCount = (int) $list->item_count;
+                        $total = (float) $list->items_total;
                         $isActive = $list->id === $activeListId;
                         $canEdit = $list->pivot->role === \App\Models\ShoppingList::ROLE_EDITOR;
                     @endphp
@@ -160,7 +160,7 @@
                             <flux:heading size="sm">{{ $list->name }}</flux:heading>
                             <flux:text class="text-xs">
                                 {{ $list->completed_at->format('d.m.Y') }}
-                                · {{ __(':count preces', ['count' => $list->products->sum('pivot.quantity')]) }}
+                                · {{ __(':count preces', ['count' => (int) $list->item_count]) }}
                                 @unless ($list->user_id === auth()->id())
                                     · {{ __('Īpašnieks: :name', ['name' => $list->user->name]) }}
                                 @endunless
@@ -170,6 +170,8 @@
                     </a>
                 @endforeach
             </div>
+
+            {{ $completedLists->links() }}
         @endif
     </div>
 </x-layouts::app>

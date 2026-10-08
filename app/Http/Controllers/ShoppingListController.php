@@ -21,31 +21,35 @@ class ShoppingListController extends Controller
     {
         $user = $request->user();
 
+        // Counts and totals come from the database (withItemTotals), not from loading every product.
         $lists = $user->shoppingLists()
             ->open()
-            ->with('products')
+            ->withItemTotals()
             ->withCount('members')
             ->orderBy('created_at')
             ->get();
 
         $sharedLists = $user->sharedShoppingLists()
             ->open()
-            ->with(['products', 'user'])
+            ->withItemTotals()
+            ->with('user')
             ->orderBy('shopping_lists.created_at')
             ->get();
 
+        // History grows forever, so it is paged.
         $completedLists = ShoppingList::query()
             ->visibleTo($user)
             ->completed()
-            ->with(['products', 'user'])
+            ->withItemTotals()
+            ->with('user')
             ->orderByDesc('completed_at')
-            ->get();
+            ->paginate(10, pageName: 'history');
 
         return view('pages.cart', [
             'lists' => $lists,
             'sharedLists' => $sharedLists,
             'completedLists' => $completedLists,
-            'monthlySpending' => $this->monthlySpending($completedLists),
+            'monthlySpending' => $this->monthlySpending($user),
             // Only looked up: viewing the page must not create a list.
             'activeListId' => $this->findActiveList($request)?->id,
         ]);
@@ -276,14 +280,18 @@ class ShoppingListController extends Controller
 
     /**
      * Money spent on finished lists in each of the last six months, oldest first.
+     * Reads only those six months (two columns), not the whole history.
      *
-     * @param  Collection<int, ShoppingList>  $completedLists
      * @return Collection<int, array{label: string, total: float}>
      */
-    private function monthlySpending(Collection $completedLists): Collection
+    private function monthlySpending(User $user): Collection
     {
-        $totals = $completedLists
-            ->groupBy(fn (ShoppingList $list): string => $list->completed_at->format('Y-m'))
+        $totals = ShoppingList::query()
+            ->visibleTo($user)
+            ->where('completed_at', '>=', now()->startOfMonth()->subMonths(5))
+            ->toBase()
+            ->get(['completed_at', 'completed_total'])
+            ->groupBy(fn (object $list): string => substr((string) $list->completed_at, 0, 7))
             ->map(fn (Collection $lists): float => (float) $lists->sum('completed_total'));
 
         return collect(range(5, 0))->map(function (int $monthsAgo) use ($totals): array {

@@ -172,6 +172,23 @@ class ShoppingList extends Model
             ->orWhereHas('members', fn (Builder $members) => $members->whereKey($user->id)));
     }
 
+    /**
+     * Add item_count (sum of quantities) and items_total (euros, saved prices for finished
+     * lists) worked out by the database, so list overviews do not load every product.
+     */
+    public function scopeWithItemTotals(Builder $query): void
+    {
+        $items = fn () => DB::table('shopping_list_items')
+            ->whereColumn('shopping_list_items.shopping_list_id', 'shopping_lists.id');
+
+        $query->addSelect([
+            'item_count' => $items()->selectRaw('COALESCE(SUM(shopping_list_items.quantity), 0)'),
+            'items_total' => $items()
+                ->join('products', 'products.id', '=', 'shopping_list_items.product_id')
+                ->selectRaw('COALESCE(SUM(COALESCE(shopping_list_items.price_at_completion, products.current_price, 0) * shopping_list_items.quantity), 0)'),
+        ]);
+    }
+
     public function scopeOpen(Builder $query): void
     {
         $query->whereNull('completed_at');

@@ -29,13 +29,16 @@
                     @endforeach
                 </select>
             </div>
+            <input type="hidden" name="period" value="{{ $period }}" />
             <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-4 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
                 {{ __('Filtrēt') }}
             </button>
         </form>
 
+        <x-history-period :current="$period" />
+
         @if ($products->isEmpty())
-            <flux:text>{{ __('Cenu izmaiņas vēl nav reģistrētas.') }}</flux:text>
+            <flux:text>{{ __('Šajā periodā cenu izmaiņas nav reģistrētas.') }}</flux:text>
         @else
             <div class="space-y-3">
                 @foreach ($products as $product)

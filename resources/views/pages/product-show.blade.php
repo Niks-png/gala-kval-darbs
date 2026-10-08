@@ -149,9 +149,12 @@
         </section>
 
         <section>
-            <flux:heading size="lg">{{ __('Cenu vēsture') }}</flux:heading>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <flux:heading size="lg">{{ __('Cenu vēsture') }}</flux:heading>
+                <x-history-period :current="$period" />
+            </div>
             @if ($history->isEmpty())
-                <flux:text class="mt-2">{{ __('Šim produktam cenu vēsture vēl nav reģistrēta.') }}</flux:text>
+                <flux:text class="mt-2">{{ __('Šajā periodā cena nav mainījusies.') }}</flux:text>
             @else
                 <div class="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
                     <x-price-sparkline :points="$prices" :trend="$trend" class="h-24 w-full" />

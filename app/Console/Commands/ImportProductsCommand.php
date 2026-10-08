@@ -29,6 +29,11 @@ class ImportProductsCommand extends Command
     private const REQUIRED_COLUMNS = ['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit'];
 
     /**
+     * Rows per database statement.
+     */
+    private const BATCH_SIZE = 500;
+
+    /**
      * Units a unit price may be given in.
      */
     private const UNITS = ['€/kg', '€/l'];
@@ -110,11 +115,15 @@ class ImportProductsCommand extends Command
             // Compared with the prices before this import, so it must be worked out first.
             $priceChanges = $this->priceChanges($products, $importedAt);
 
-            Product::upsert(
-                $products,
-                ['title', 'store'],
-                ['category', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url', 'offer_ended_at', 'updated_at'],
-            );
+            // In batches: one statement for a whole shop could pass MySQL's limit of 65,535 values
+            // (Rimi alone is about 4,300 products × 11 columns). Still one transaction.
+            foreach (array_chunk($products, self::BATCH_SIZE) as $batch) {
+                Product::upsert(
+                    $batch,
+                    ['title', 'store'],
+                    ['category', 'original_price', 'current_price', 'unit_price', 'unit', 'image_url', 'offer_ended_at', 'updated_at'],
+                );
+            }
 
             $ended = Product::query()
                 ->whereIn('store', array_unique(array_column($products, 'store')))
@@ -122,8 +131,8 @@ class ImportProductsCommand extends Command
                 ->onOffer()
                 ->update(['offer_ended_at' => $importedAt]);
 
-            if ($priceChanges !== []) {
-                ProductPriceHistory::insert($priceChanges);
+            foreach (array_chunk($priceChanges, self::BATCH_SIZE) as $batch) {
+                ProductPriceHistory::insert($batch);
             }
 
             return $ended;
@@ -182,10 +191,13 @@ class ImportProductsCommand extends Command
      */
     private function priceChanges(array $products, CarbonInterface $importedAt): array
     {
+        // Only the four columns needed, as plain rows, for the shops in this file
+        // (not a WHERE title IN list of thousands of titles, not full models).
         $existingProducts = Product::query()
-            ->whereIn('title', array_column($products, 'title'))
-            ->get()
-            ->keyBy(fn (Product $product): string => $product->title.'|'.$product->store);
+            ->whereIn('store', array_unique(array_column($products, 'store')))
+            ->toBase()
+            ->get(['id', 'title', 'store', 'current_price'])
+            ->keyBy(fn (object $product): string => $product->title.'|'.$product->store);
 
         $priceChanges = [];
         foreach ($products as $product) {
