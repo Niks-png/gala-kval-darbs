@@ -67,6 +67,9 @@ return [
 
     'timezone' => 'UTC',
 
+    // Times are stored in UTC (above) and shown to users in this time zone, via ->local().
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'Europe/Riga'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

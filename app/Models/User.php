@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 /**
  * @property int $id
@@ -67,6 +68,24 @@ class User extends Authenticatable implements MustVerifyEmail
             $user->ensureNotLastAdmin();
             $user->handOverSharedShoppingLists();
         });
+    }
+
+    /**
+     * Send the verification email without letting a mail server problem break what the user
+     * was doing. Signing up runs this after the account is created; if it threw, the person
+     * would see an error page and be left with an account they never got a link for. The
+     * verification page shows the failure, and its button sends the link again.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        try {
+            parent::sendEmailVerificationNotification();
+            session()->forget('verification_mail_failed');
+        } catch (TransportExceptionInterface $exception) {
+            report($exception);
+            // Kept (not flashed) until a send works: signing up passes two redirects before the page.
+            session()->put('verification_mail_failed', true);
+        }
     }
 
     /**

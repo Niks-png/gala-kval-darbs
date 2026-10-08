@@ -107,7 +107,7 @@
                                             <td class="px-3 py-2 {{ $rowChanged ? ($rowDown ? 'text-green-400' : 'text-red-400') : 'text-neutral-500' }}">
                                                 {{ $rowChanged ? lv_number((float) $change->new_price - (float) $change->previous_price, 2) . ' €' : __('Bez izmaiņām') }}
                                             </td>
-                                            <td class="px-3 py-2">{{ $change->created_at->format('d.m.Y H:i') }}</td>
+                                            <td class="px-3 py-2">{{ $change->created_at->local()->format('d.m.Y H:i') }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

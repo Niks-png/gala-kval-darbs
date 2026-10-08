@@ -96,7 +96,7 @@ new class extends Component {
         <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-neutral-50 px-4 py-3 text-sm dark:bg-neutral-800/60">
             <span>{{ __('Nopirkts :checked no :count', ['checked' => $checkedCount, 'count' => $products->count()]) }}</span>
             @if ($completed)
-                <span>{{ __('Nopirkto preču summa pēc veikala cenām :date:', ['date' => $this->list->completed_at->format('d.m.Y')]) }} <strong>{{ lv_number((float) $this->list->completed_total, 2) }} €</strong></span>
+                <span>{{ __('Nopirkto preču summa pēc veikala cenām :date:', ['date' => $this->list->completed_at->local()->format('d.m.Y')]) }} <strong>{{ lv_number((float) $this->list->completed_total, 2) }} €</strong></span>
             @else
                 <span class="flex flex-wrap gap-4">
                     <span>{{ __('Kopā:') }} <strong>{{ lv_number($total, 2) }} €</strong></span>

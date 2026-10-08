@@ -60,7 +60,7 @@
             @if ($list->isCompleted())
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
                     <flux:text>
-                        {{ __('Iepirkšanās pabeigta :date. Saraksts ir saglabāts vēsturē un vairs netiek mainīts.', ['date' => $list->completed_at->format('d.m.Y')]) }}
+                        {{ __('Iepirkšanās pabeigta :date. Saraksts ir saglabāts vēsturē un vairs netiek mainīts.', ['date' => $list->completed_at->local()->format('d.m.Y')]) }}
                     </flux:text>
                     <form method="POST" action="{{ route('cart.copy', $list) }}">
                         @csrf
@@ -142,8 +142,8 @@
                             {{ __('Pievienojas kā: :role', ['role' => $roleLabels[$list->invite_role] ?? $list->invite_role]) }}
                             @if ($list->invite_expires_at)
                                 · {{ $list->invite_expires_at->isPast()
-                                    ? __('Saite beidzās :date, izveido jaunu.', ['date' => $list->invite_expires_at->format('d.m.Y')])
-                                    : __('Derīga līdz :date', ['date' => $list->invite_expires_at->format('d.m.Y H:i')]) }}
+                                    ? __('Saite beidzās :date, izveido jaunu.', ['date' => $list->invite_expires_at->local()->format('d.m.Y')])
+                                    : __('Derīga līdz :date', ['date' => $list->invite_expires_at->local()->format('d.m.Y H:i')]) }}
                             @endif
                         </flux:text>
                     @endif

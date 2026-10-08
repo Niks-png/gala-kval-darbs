@@ -45,7 +45,7 @@
 
                 @if ($product->offerHasEnded())
                     <flux:callout variant="warning" icon="clock" data-test="offer-ended">
-                        <flux:callout.text>{{ __('Šis piedāvājums beidzās :date. Cena var būt mainījusies.', ['date' => $product->offer_ended_at->format('d.m.Y')]) }}</flux:callout.text>
+                        <flux:callout.text>{{ __('Šis piedāvājums beidzās :date. Cena var būt mainījusies.', ['date' => $product->offer_ended_at->local()->format('d.m.Y')]) }}</flux:callout.text>
                     </flux:callout>
                 @endif
 
@@ -159,8 +159,8 @@
                 <div class="mt-3 rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
                     <x-price-sparkline :points="$prices" :trend="$trend" class="h-24 w-full" />
                     <div class="mt-2 flex justify-between text-xs text-neutral-500">
-                        <span>{{ $history->first()->created_at->format('d.m.Y') }}</span>
-                        <span>{{ $latest->created_at->format('d.m.Y') }}</span>
+                        <span>{{ $history->first()->created_at->local()->format('d.m.Y') }}</span>
+                        <span>{{ $latest->created_at->local()->format('d.m.Y') }}</span>
                     </div>
                 </div>
 
@@ -178,7 +178,7 @@
                             @foreach ($history->reverse() as $change)
                                 @php($changeAmount = (float) $change->new_price - (float) $change->previous_price)
                                 <tr>
-                                    <td class="px-3 py-2">{{ $change->created_at->format('d.m.Y H:i') }}</td>
+                                    <td class="px-3 py-2">{{ $change->created_at->local()->format('d.m.Y H:i') }}</td>
                                     <td class="px-3 py-2">{{ lv_number((float) $change->previous_price, 2) }} €</td>
                                     <td class="px-3 py-2 font-medium">{{ lv_number((float) $change->new_price, 2) }} €</td>
                                     <td class="px-3 py-2 {{ $changeAmount < 0 ? 'text-green-400' : ($changeAmount > 0 ? 'text-red-400' : 'text-neutral-500') }}">

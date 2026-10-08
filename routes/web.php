@@ -22,7 +22,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('price-history', [ProductController::class, 'priceHistory'])->name('price-history');
 
     Route::view('recipes', 'pages.recipes')->name('recipes');
-    Route::post('recipes/match', [RecipeController::class, 'match'])->name('recipes.match');
+    // Each request searches products for up to 30 ingredients.
+    Route::post('recipes/match', [RecipeController::class, 'match'])->middleware('throttle:30,1')->name('recipes.match');
     Route::get('map', function () {
         return view('pages.map', [
             'stores' => Store::query()->orderBy('name')->get(),
@@ -49,10 +50,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('cart/join/{token}', [ShoppingListInviteController::class, 'join'])->name('cart.invite.join');
     Route::post('cart/{shoppingList}/invite-link', [ShoppingListInviteController::class, 'store'])->name('cart.invite.store');
     Route::delete('cart/{shoppingList}/invite-link', [ShoppingListInviteController::class, 'destroy'])->name('cart.invite.destroy');
-    Route::post('cart/{shoppingList}/members', [ShoppingListMemberController::class, 'store'])->name('cart.members.store');
+    // The answer shows whether an email address has an account, so it must not be tried in bulk.
+    Route::post('cart/{shoppingList}/members', [ShoppingListMemberController::class, 'store'])->middleware('throttle:10,1')->name('cart.members.store');
     Route::patch('cart/{shoppingList}/members/{user}', [ShoppingListMemberController::class, 'update'])->name('cart.members.update');
     Route::delete('cart/{shoppingList}/members/{user}', [ShoppingListMemberController::class, 'destroy'])->name('cart.members.destroy');
-    Route::post('cart/items', [ShoppingListController::class, 'storeMany'])->name('cart.items.store-many');
+    Route::post('cart/items', [ShoppingListController::class, 'storeMany'])->middleware('throttle:30,1')->name('cart.items.store-many');
     Route::post('cart/items/{product}', [ShoppingListController::class, 'quickAdd'])->name('cart.items.store');
     Route::post('products/{product}/add-to-list', [ShoppingListController::class, 'storeItem'])->name('products.add-to-list');
     Route::post('cart/{shoppingList}/items/{product}', [ShoppingListController::class, 'increase'])->name('cart.lists.items.store');

@@ -159,7 +159,7 @@
                         <div class="min-w-0">
                             <flux:heading size="sm">{{ $list->name }}</flux:heading>
                             <flux:text class="text-xs">
-                                {{ $list->completed_at->format('d.m.Y') }}
+                                {{ $list->completed_at->local()->format('d.m.Y') }}
                                 · {{ __(':count preces', ['count' => (int) $list->item_count]) }}
                                 @unless ($list->user_id === auth()->id())
                                     · {{ __('Īpašnieks: :name', ['name' => $list->user->name]) }}

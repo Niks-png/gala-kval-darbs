@@ -2,7 +2,11 @@
     <div class="flex flex-col gap-6">
         <x-auth-header :title="__('Apstiprini savu e-pastu')" :description="__('Mēs nosūtījām apstiprināšanas saiti uz :email. Atver e-pastu un noklikšķini uz saites, lai turpinātu.', ['email' => auth()->user()->email])" />
 
-        @if (session('status') === 'verification-link-sent')
+        @if (session('verification_mail_failed'))
+            <div class="text-center text-sm font-medium text-amber-600" data-test="verification-mail-failed">
+                {{ __('E-pastu neizdevās nosūtīt. Pēc brīža spied "Nosūtīt saiti vēlreiz".') }}
+            </div>
+        @elseif (session('status') === 'verification-link-sent')
             <div class="text-center text-sm font-medium text-green-600">
                 {{ __('Jauna apstiprināšanas saite nosūtīta uz tavu e-pastu.') }}
             </div>

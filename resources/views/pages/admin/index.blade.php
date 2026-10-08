@@ -102,7 +102,7 @@
                         <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
                             @foreach ($recentRuns as $run)
                                 <tr class="align-top">
-                                    <td class="px-4 py-3 whitespace-nowrap font-mono tabular-nums">{{ $run->started_at->format('d.m.Y H:i') }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap font-mono tabular-nums">{{ $run->started_at->local()->format('d.m.Y H:i') }}</td>
                                     <td class="px-4 py-3">{{ $run->store }}</td>
                                     <td class="px-4 py-3">
                                         @include('pages.admin.partials.run-status', ['run' => $run])

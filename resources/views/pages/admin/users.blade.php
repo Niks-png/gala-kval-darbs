@@ -52,7 +52,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap font-mono tabular-nums">{{ $user->created_at?->format('d.m.Y') }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap font-mono tabular-nums">{{ $user->created_at?->local()->format('d.m.Y') }}</td>
                             <td class="px-4 py-3 text-right font-mono tabular-nums">{{ $user->shopping_lists_count }}</td>
                             <td class="px-4 py-3 text-right font-mono tabular-nums">{{ $user->watched_products_count }}</td>
                             <td class="px-4 py-3">

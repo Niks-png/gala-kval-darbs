@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ShoppingList;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -286,16 +287,20 @@ class ShoppingListController extends Controller
      */
     private function monthlySpending(User $user): Collection
     {
+        // Months as users see them: in Riga time, not UTC (a purchase at 01:30 on 1 October in
+        // Riga is still 30 September in UTC).
+        $timezone = config('app.display_timezone');
+
         $totals = ShoppingList::query()
             ->visibleTo($user)
-            ->where('completed_at', '>=', now()->startOfMonth()->subMonths(5))
+            ->where('completed_at', '>=', now($timezone)->startOfMonth()->subMonths(5)->utc())
             ->toBase()
             ->get(['completed_at', 'completed_total'])
-            ->groupBy(fn (object $list): string => substr((string) $list->completed_at, 0, 7))
+            ->groupBy(fn (object $list): string => CarbonImmutable::parse($list->completed_at, 'UTC')->local()->format('Y-m'))
             ->map(fn (Collection $lists): float => (float) $lists->sum('completed_total'));
 
-        return collect(range(5, 0))->map(function (int $monthsAgo) use ($totals): array {
-            $month = now()->startOfMonth()->subMonths($monthsAgo);
+        return collect(range(5, 0))->map(function (int $monthsAgo) use ($totals, $timezone): array {
+            $month = now($timezone)->startOfMonth()->subMonths($monthsAgo);
 
             return [
                 'label' => $month->translatedFormat('F'),
