@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\LastAdminException;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -38,7 +39,11 @@ class AdminUserController extends Controller
 
         $validated = $request->validate(['is_admin' => ['required', 'boolean']]);
 
-        $user->forceFill(['is_admin' => $validated['is_admin']])->save();
+        if ($validated['is_admin']) {
+            $user->forceFill(['is_admin' => true])->save();
+        } elseif (! $user->revokeAdmin()) {
+            return back()->with('error', __('Sistēmā jāpaliek vismaz vienam administratoram.'));
+        }
 
         return back()->with('success', $user->is_admin
             ? __(':name tagad ir administrators.', ['name' => $user->name])
@@ -52,7 +57,11 @@ class AdminUserController extends Controller
         // Shared lists they own pass to another member first (User::booted); the rest of their
         // lists, memberships, invitations and follows are removed by cascading foreign keys.
         // One transaction, so a failure cannot leave lists handed over but the user still there.
-        DB::transaction(fn () => $user->delete());
+        try {
+            DB::transaction(fn () => $user->delete());
+        } catch (LastAdminException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return back()->with('success', __('Lietotājs :name dzēsts.', ['name' => $user->name]));
     }

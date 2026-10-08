@@ -1,6 +1,7 @@
 <?php
 
 use App\Concerns\PasswordValidationRules;
+use App\Exceptions\LastAdminException;
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,16 @@ new class extends Component {
             'password' => $this->currentPasswordRules(),
         ]);
 
-        // Shared lists the user owns pass to another member before the account goes (User::booted).
+        // Checked before logging out, so the last admin stays signed in and sees why. (Logging out
+        // must come first: it saves the remember-me token, which would re-insert a deleted user.)
+        if (Auth::user()->isLastAdmin()) {
+            $this->addError('password', (new LastAdminException)->getMessage());
+
+            return;
+        }
+
+        // Shared lists the user owns pass to another member before the account goes (User::booted),
+        // which also re-checks the last admin under a lock in case another admin changed meanwhile.
         $user = tap(Auth::user(), $logout(...));
         DB::transaction(fn () => $user->delete());
 

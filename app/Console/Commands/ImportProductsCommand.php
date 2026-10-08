@@ -9,6 +9,7 @@ use App\Services\ProductCategorizer;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use SplFileObject;
 use Throwable;
@@ -26,6 +27,11 @@ class ImportProductsCommand extends Command
      * Columns every scraper writes. image_url is optional.
      */
     private const REQUIRED_COLUMNS = ['title', 'store', 'original_price', 'current_price', 'unit_price', 'unit'];
+
+    /**
+     * Units a unit price may be given in.
+     */
+    private const UNITS = ['€/kg', '€/l'];
 
     /**
      * @var string
@@ -58,6 +64,7 @@ class ImportProductsCommand extends Command
         // One timestamp for the whole file, so "not in this import" is "updated before it".
         $importedAt = now();
         $products = [];
+        $invalid = [];
         while (! $file->eof()) {
             $row = $file->fgetcsv();
 
@@ -67,26 +74,27 @@ class ImportProductsCommand extends Command
 
             // Column name => value, so the order of the CSV columns does not matter.
             $values = array_combine($header, array_pad(array_slice($row, 0, count($header)), count($header), null));
-            $title = trim((string) $values['title']);
-            $store = trim((string) $values['store']);
+            $product = $this->validProduct($values);
 
-            if ($title === '' || $store === '') {
+            if (is_string($product)) {
+                $invalid[] = $product;
+
                 continue;
             }
 
             $products[] = [
-                'title' => $title,
-                'store' => $store,
-                'category' => $categorizer->categorize($title),
-                'original_price' => $this->nullableValue($values['original_price']),
-                'current_price' => $this->nullablePrice($values['current_price']),
-                'unit_price' => $this->nullablePrice($values['unit_price']),
-                'unit' => $this->nullableValue($values['unit']),
-                'image_url' => $this->nullableValue($values['image_url'] ?? null),
+                ...$product,
+                'category' => $categorizer->categorize($product['title']),
                 'offer_ended_at' => null,
                 'created_at' => $importedAt,
                 'updated_at' => $importedAt,
             ];
+        }
+
+        if ($invalid !== []) {
+            // Scraped data is never trusted: a broken row is left out instead of saved or crashing the import.
+            $this->warn(sprintf('Skipped %d rows with invalid data, e.g. %s', count($invalid), $invalid[0]));
+            Log::warning('products:import skipped invalid rows', ['file' => $filePath, 'count' => count($invalid), 'examples' => array_slice($invalid, 0, 5)]);
         }
 
         if ($products === []) {
@@ -196,6 +204,66 @@ class ImportProductsCommand extends Command
         }
 
         return $priceChanges;
+    }
+
+    /**
+     * Check one CSV row. A row with a broken title, store or price is rejected (returned as a
+     * reason); optional fields that are broken are left empty instead.
+     *
+     * @param  array<string, string|null>  $values
+     * @return array{title: string, store: string, original_price: ?string, current_price: ?string, unit_price: ?string, unit: ?string, image_url: ?string}|string
+     */
+    private function validProduct(array $values): array|string
+    {
+        $title = $this->nullableValue($values['title']);
+        $store = $this->nullableValue($values['store']);
+
+        if ($title === null || $store === null || mb_strlen($title) > 255 || mb_strlen($store) > 255) {
+            return sprintf('missing or too long title/store ("%s")', mb_substr((string) $title, 0, 40));
+        }
+
+        $currentPrice = $this->nullablePrice($values['current_price']);
+
+        // No price at all is allowed (e.g. a leaflet banner), but a price must be a real one.
+        if ($currentPrice !== null && ! $this->isValidPrice($currentPrice)) {
+            return sprintf('invalid price "%s" for "%s"', $values['current_price'], mb_substr($title, 0, 40));
+        }
+
+        $unit = $this->nullableValue($values['unit']);
+        $unitPrice = $this->nullablePrice($values['unit_price']);
+
+        if (! in_array($unit, self::UNITS, true) || $unitPrice === null || ! $this->isValidPrice($unitPrice)) {
+            $unit = $unitPrice = null;
+        }
+
+        $originalPrice = $this->nullableValue($values['original_price']);
+        $imageUrl = $this->nullableValue($values['image_url'] ?? null);
+
+        return [
+            'title' => $title,
+            'store' => $store,
+            'original_price' => $originalPrice !== null && mb_strlen($originalPrice) <= 255 ? $originalPrice : null,
+            'current_price' => $currentPrice,
+            'unit_price' => $unitPrice,
+            'unit' => $unit,
+            'image_url' => $this->isValidImageUrl($imageUrl) ? $imageUrl : null,
+        ];
+    }
+
+    /**
+     * A positive amount that fits the decimal(10, 2) price columns.
+     */
+    private function isValidPrice(string $price): bool
+    {
+        return preg_match('/^\d{1,8}(\.\d{1,2})?$/', $price) === 1 && (float) $price > 0;
+    }
+
+    private function isValidImageUrl(?string $url): bool
+    {
+        return $url !== null
+            && mb_strlen($url) <= 2048
+            && preg_match('#^https?://#i', $url) === 1
+            && filter_var($url, FILTER_VALIDATE_URL) !== false;
     }
 
     private function nullableValue(?string $value): ?string

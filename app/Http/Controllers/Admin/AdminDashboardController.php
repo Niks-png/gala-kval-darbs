@@ -21,6 +21,9 @@ class AdminDashboardController extends Controller
 {
     public function index(): View
     {
+        // Show crashed runs as failed instead of "running" forever.
+        ScrapeRun::failStaleRuns();
+
         $products = Product::query()->onOffer()
             ->selectRaw('store, count(*) as products, sum(original_price is not null) as discounted, max(updated_at) as last_updated')
             ->groupBy('store')
@@ -69,10 +72,8 @@ class AdminDashboardController extends Controller
 
         // Starting another update while one is waiting or running would only queue duplicate work.
         // A "running" run older than the scrape timeout crashed, so it must not block new updates.
-        $running = ScrapeRun::query()
-            ->where('status', ScrapeRun::STATUS_RUNNING)
-            ->where('started_at', '>=', now()->subSeconds((int) config('services.scraper.timeout') + 300))
-            ->exists();
+        ScrapeRun::failStaleRuns();
+        $running = ScrapeRun::query()->where('status', ScrapeRun::STATUS_RUNNING)->exists();
 
         if ($this->pendingScrapes() > 0 || $running) {
             return back()->with('error', __('Cenu atjaunošana jau notiek vai gaida rindā. Pagaidi, līdz tā beidzas.'));

@@ -237,3 +237,39 @@ test('an empty product file is refused', function () {
 
     unlink($csvPath);
 });
+
+test('rows with broken prices or titles are skipped and broken optional fields are left empty', function () {
+    $longTitle = str_repeat('A', 300);
+    importCsv(implode("\n", [
+        'Piens,rimi.lv,,0.99,0.99,€/l',
+        'Negatīvs,rimi.lv,,-1.50,,',
+        'Nulle,rimi.lv,,0,,',
+        'Kļūda,rimi.lv,,1.2.3,,',
+        'Milzīgs,rimi.lv,,123456789.00,,',
+        "{$longTitle},rimi.lv,,1.00,,",
+        'Dīvaina vienība,rimi.lv,,2.00,4.00,€/gab',
+        'Bez cenas,rimi.lv,,,,',
+    ]));
+
+    expect(Product::query()->orderBy('title')->pluck('title')->all())->toBe(['Bez cenas', 'Dīvaina vienība', 'Piens'])
+        ->and(Product::query()->where('title', 'Dīvaina vienība')->sole())
+        ->unit->toBeNull()
+        ->unit_price->toBeNull();
+});
+
+test('image addresses must be web links and may be long', function () {
+    $longUrl = 'https://cdn.example.com/'.str_repeat('a', 900).'.jpg';
+    $csvPath = tempnam(sys_get_temp_dir(), 'products-');
+    file_put_contents($csvPath, implode("\n", [
+        'title,store,original_price,current_price,unit_price,unit,image_url',
+        "Garš,rimi.lv,,1.00,,,{$longUrl}",
+        'Skripts,rimi.lv,,1.00,,,javascript:alert(1)',
+    ]));
+
+    $this->artisan('products:import', ['file' => $csvPath])->assertSuccessful();
+
+    expect(Product::query()->where('title', 'Garš')->sole()->image_url)->toBe($longUrl)
+        ->and(Product::query()->where('title', 'Skripts')->sole()->image_url)->toBeNull();
+
+    unlink($csvPath);
+});

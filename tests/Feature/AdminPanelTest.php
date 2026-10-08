@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\LastAdminException;
 use App\Jobs\RunScrape;
 use App\Models\Product;
 use App\Models\ScrapeRun;
@@ -115,6 +116,7 @@ test('admins can delete users together with their lists, but not themselves', fu
 });
 
 test('users:admin grants and revokes admin rights', function () {
+    User::factory()->admin()->create();
     $user = User::factory()->create(['email' => 'anna@example.com']);
 
     $this->artisan('users:admin', ['email' => 'anna@example.com'])->assertSuccessful();
@@ -132,4 +134,30 @@ test('is_admin cannot be set through mass assignment', function () {
     ]);
 
     expect($user->fresh()->is_admin)->toBeFalse();
+});
+
+test('the last admin cannot lose admin rights or be deleted, from the panel, the console or settings', function () {
+    $admin = User::factory()->admin()->create();
+    $other = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
+    // With two admins, one can be demoted.
+    $this->patch(route('admin.users.update', $other), ['is_admin' => false])->assertSessionHas('success');
+    expect($other->refresh()->is_admin)->toBeFalse();
+
+    // Now $admin is the only one left.
+    expect($admin->revokeAdmin())->toBeFalse()
+        ->and(fn () => $admin->delete())->toThrow(LastAdminException::class);
+
+    $this->artisan('users:admin', ['email' => $admin->email, '--revoke' => true])
+        ->expectsOutputToContain('is the last admin')
+        ->assertFailed();
+
+    Livewire\Livewire::test('pages::settings.delete-user-modal')
+        ->set('password', 'password')
+        ->call('deleteUser')
+        ->assertHasErrors('password');
+
+    expect($admin->refresh()->is_admin)->toBeTrue()
+        ->and(User::query()->whereKey($admin->id)->exists())->toBeTrue();
 });

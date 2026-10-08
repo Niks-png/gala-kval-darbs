@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\LastAdminException;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -61,7 +63,58 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Lists are deleted with their owner (foreign key cascade), but a shared list belongs
         // to its members too, so hand it over first. Covers both the user and an admin deleting.
-        static::deleting(fn (User $user) => $user->handOverSharedShoppingLists());
+        static::deleting(function (User $user): void {
+            $user->ensureNotLastAdmin();
+            $user->handOverSharedShoppingLists();
+        });
+    }
+
+    /**
+     * Whether this is the only admin left, for showing why an action is not allowed.
+     */
+    public function isLastAdmin(): bool
+    {
+        return $this->is_admin && static::query()->where('is_admin', true)->count() <= 1;
+    }
+
+    /**
+     * Take away admin rights, unless this is the last admin.
+     *
+     * @return bool False if this is the last admin
+     */
+    public function revokeAdmin(): bool
+    {
+        return DB::transaction(function (): bool {
+            if ($this->lockedAdminIds()->all() === [$this->id]) {
+                return false;
+            }
+
+            $this->forceFill(['is_admin' => false])->save();
+
+            return true;
+        });
+    }
+
+    /**
+     * Stop the last admin from being deleted. Run inside the deleting transaction, so the
+     * admin rows stay locked until the delete is done.
+     */
+    public function ensureNotLastAdmin(): void
+    {
+        if ($this->is_admin && $this->lockedAdminIds()->all() === [$this->id]) {
+            throw new LastAdminException;
+        }
+    }
+
+    /**
+     * Admin ids, with their rows locked so two admins changing each other at the same moment
+     * are handled one after the other and cannot leave nobody in charge.
+     *
+     * @return Collection<int, int>
+     */
+    private function lockedAdminIds(): Collection
+    {
+        return static::query()->where('is_admin', true)->lockForUpdate()->orderBy('id')->pluck('id');
     }
 
     public function shoppingLists(): HasMany

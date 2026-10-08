@@ -34,6 +34,24 @@ class ScrapeRun extends Model
         ];
     }
 
+    /**
+     * Runs still "running" after the scrape timeout lost their process (server restart, crash):
+     * a real run would have been stopped by the timeout by now. Marks them as failed.
+     *
+     * @return int How many were marked
+     */
+    public static function failStaleRuns(): int
+    {
+        return static::query()
+            ->where('status', self::STATUS_RUNNING)
+            ->where('started_at', '<', now()->subSeconds((int) config('services.scraper.timeout') + 300))
+            ->update([
+                'status' => self::STATUS_FAILED,
+                'error' => 'The process stopped without finishing (server restart or crash).',
+                'finished_at' => now(),
+            ]);
+    }
+
     public function durationInSeconds(): ?int
     {
         return $this->finished_at ? (int) $this->started_at->diffInSeconds($this->finished_at) : null;

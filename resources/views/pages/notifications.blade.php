@@ -100,6 +100,8 @@
                         </form>
                     </div>
                 @endforeach
+
+                {{ $alerts->links() }}
             </section>
         @endif
 

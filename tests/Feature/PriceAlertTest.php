@@ -200,3 +200,21 @@ test('users can delete their own alerts but not someone elses', function () {
     $this->delete(route('notifications.destroy-all'))->assertRedirect();
     expect($user->notifications()->count())->toBe(0);
 });
+
+test('only the alerts shown are marked as read; the rest stay unread for later pages', function () {
+    $user = User::factory()->create();
+    $product = Product::query()->create(['title' => 'Piens', 'store' => 'Rimi', 'current_price' => 1.19]);
+
+    foreach (range(1, 25) as $i) {
+        $this->travel(1)->minute();
+        $user->notify(new PriceDropped($product, 1.39, 1.19));
+    }
+
+    $this->actingAs($user)->get(route('notifications'))->assertOk();
+
+    expect($user->unreadNotifications()->count())->toBe(5);
+
+    $this->get(route('notifications', ['page' => 2]))->assertOk();
+
+    expect($user->unreadNotifications()->count())->toBe(0);
+});

@@ -27,7 +27,13 @@ class MakeAdminCommand extends Command
             return self::FAILURE;
         }
 
-        $user->forceFill(['is_admin' => ! $this->option('revoke')])->save();
+        if (! $this->option('revoke')) {
+            $user->forceFill(['is_admin' => true])->save();
+        } elseif (! $user->revokeAdmin()) {
+            $this->error("{$user->email} is the last admin. Make someone else an admin first.");
+
+            return self::FAILURE;
+        }
 
         $this->info($user->is_admin ? "{$user->email} is now an admin." : "{$user->email} is no longer an admin.");
 

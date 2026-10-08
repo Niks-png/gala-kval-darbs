@@ -88,6 +88,9 @@ Safeguards, so a broken shop site or a double click cannot damage good data:
 - **All or nothing.** New prices, ended offers and price history are saved in one database transaction.
 - **One update per shop at a time.** A shop that is already being updated (by the schedule or the admin panel) is skipped, and the admin panel will not queue a second update while one is waiting or running.
 - **Price drop alerts are sent exactly once,** after the prices are saved. If sending fails, the import still counts and the alerts go out with the next import.
+- **Scraped data is checked row by row.** Rows with a missing title or an invalid price (negative, zero, malformed, too large) are skipped and logged; a broken unit, unit price or image address is left empty. On MySQL the database also refuses negative prices, quantities outside 1–99 and unknown list roles.
+
+A daily `php artisan products:housekeeping` (03:30) marks runs stuck at "running" after a crash as failed, deletes scrape history older than 90 days, keeps `storage/logs/scrape.log` under 1 MB and removes CSV files left by crashed runs. The application log rotates daily and keeps 14 days (`LOG_STACK=daily`).
 
 Which shops are scraped is set by `SCRAPER_STORES` (default `maxima,top,rimi`). A Lidl scraper exists but is off: lidl.lv currently publishes its offers only as leaflet images, not as product listings, so it finds almost nothing. Add `lidl` to `SCRAPER_STORES` to try it again.
 

@@ -152,3 +152,37 @@ test('products:scrape is scheduled daily', function () {
         ->and($event->expression)->toBe('0 6 * * *')
         ->and($event->timezone)->toBe('Europe/Riga');
 });
+
+test('housekeeping fails stuck runs, drops old history, trims the log and removes leftover files', function () {
+    $stuck = ScrapeRun::query()->create(['store' => 'rimi', 'status' => ScrapeRun::STATUS_RUNNING, 'started_at' => now()->subHours(3)]);
+    $current = ScrapeRun::query()->create(['store' => 'top', 'status' => ScrapeRun::STATUS_RUNNING, 'started_at' => now()->subMinute()]);
+    $old = ScrapeRun::query()->create(['store' => 'top', 'status' => ScrapeRun::STATUS_SUCCESS, 'started_at' => now()->subDays(120), 'finished_at' => now()->subDays(120)]);
+
+    $dir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'scrapes-'.uniqid();
+    mkdir($dir);
+    config(['services.scraper.output_dir' => $dir]);
+    touch($leftover = $dir.'/rimi_products_7.csv', now()->subDays(2)->getTimestamp());
+    touch($inUse = $dir.'/top_products_8.csv');
+
+    $log = storage_path('logs/scrape.log');
+    $original = is_file($log) ? file_get_contents($log) : null;
+    file_put_contents($log, str_repeat("line of scrape output\n", 1000));
+
+    try {
+        $this->artisan('products:housekeeping', ['--max-log-kb' => 4])->assertSuccessful();
+
+        expect($stuck->refresh()->status)->toBe(ScrapeRun::STATUS_FAILED)
+            ->and($current->refresh()->status)->toBe(ScrapeRun::STATUS_RUNNING)
+            ->and(ScrapeRun::query()->find($old->id))->toBeNull()
+            ->and(filesize($log))->toBeLessThanOrEqual(4096)
+            ->and(file_get_contents($log))->toStartWith('line of scrape output')
+            ->and(file_exists($leftover))->toBeFalse()
+            ->and(file_exists($inUse))->toBeTrue();
+    } finally {
+        $original === null ? unlink($log) : file_put_contents($log, $original);
+    }
+});
+
+test('housekeeping is scheduled daily', function () {
+    expect(collect(app(Schedule::class)->events())->contains(fn ($event) => str_contains($event->command ?? '', 'products:housekeeping')))->toBeTrue();
+});

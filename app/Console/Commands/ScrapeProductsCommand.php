@@ -63,6 +63,8 @@ class ScrapeProductsCommand extends Command
             return self::FAILURE;
         }
 
+        ScrapeRun::failStaleRuns();
+
         $failed = [];
 
         // One failing store must not stop the others from updating.

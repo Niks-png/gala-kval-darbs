@@ -12,10 +12,14 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $alerts = $user->notifications()->latest()->limit(50)->get();
+        $alerts = $user->notifications()->latest()->paginate(20);
 
-        // Opening the page counts as reading; the view still highlights what was new.
-        $user->unreadNotifications()->update(['read_at' => now()]);
+        // Seeing an alert counts as reading it, but only the ones on this page: unread alerts on
+        // later pages stay unread. The view still highlights what was new (loaded before this update).
+        $user->notifications()
+            ->whereKey($alerts->getCollection()->modelKeys())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
 
         return view('pages.notifications', [
             'invitations' => $user->shoppingListInvitations()
