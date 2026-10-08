@@ -1,4 +1,6 @@
 import os
+import re
+from decimal import Decimal
 from urllib.parse import urljoin
 
 import requests
@@ -17,11 +19,27 @@ STORE = "maxima.lv"
 OFFER_SELECTOR = ".offer-item"
 # Fewer offers than this means the page did not load properly; keep the previous data instead.
 MIN_PRODUCTS = int(os.environ.get("MAXIMA_MIN_PRODUCTS", "100"))
+# Titles end with the sale and regular price per unit: "..., 200 g (5,95 €/kg); (14,95 €/kg)".
+# Offers covering several products say "from": "(no 6,92 €/kg)".
+TITLE_UNIT_PRICE = re.compile(r"\(\s*(no\s+)?([\d.,]*)\s*€/\s*([^)]*?)\s*\)\s*;?", re.IGNORECASE)
+
+
+def split_title(text: str) -> tuple[str, Decimal | None, str | None]:
+    """The title without its unit prices, and the sale price per kg or l if Maxima gives one."""
+    title = " ".join(TITLE_UNIT_PRICE.sub(" ", text).split()).rstrip(" ,;")
+    first = TITLE_UNIT_PRICE.search(text)
+    unit = first.group(3).lower().rstrip(".") if first else ""
+
+    # A "from" price belongs to the cheapest of several products, so it is not this offer's unit price.
+    if unit in ("kg", "l") and not first.group(1) and parse_price(first.group(2)):
+        return title, parse_price(first.group(2)), unit
+
+    return title, None, None
 
 
 def extract_product(item) -> dict[str, str]:
     title = item.select_one(".item-title-text, .text .title")
-    title_value = title.get_text(" ", strip=True) if title else ""
+    title_value, unit_price, unit = split_title(title.get_text(" ", strip=True) if title else "")
 
     sale_price = item.select_one(".item-price-new .price-value")
     cents = item.select_one(".item-price-new .cents-value")
@@ -32,7 +50,8 @@ def extract_product(item) -> dict[str, str]:
 
     old_price = item.select_one(".info-old-price .price-value")
     original_price = parse_price(old_price.get_text(strip=True)) if old_price else None
-    unit_price, unit = unit_price_from_size(current_price, title_value)
+    if unit_price is None:
+        unit_price, unit = unit_price_from_size(current_price, title_value)
 
     image = item.select_one('img[src*="/uploads/"]') or item.select_one("img")
     image_src = image.get("src", "").strip() if image else ""

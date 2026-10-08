@@ -35,6 +35,33 @@ class MaximaTest(unittest.TestCase):
             "image_url": "https://www.maxima.lv/uploads/products/piens.jpg",
         })
 
+    def test_unit_prices_are_taken_out_of_the_title(self):
+        item = element("""
+            <div class="offer-item">
+                <div class="item-title-text">Saldkrējuma sviests LATGALE, 200 g, 82,5% (5,95 €/kg); (14,95 €/kg)</div>
+                <div class="item-price-new"><span class="price-value">1</span><span class="cents-value">19</span></div>
+            </div>
+        """)
+
+        product = maxima_scraper.extract_product(item)
+
+        self.assertEqual(product["title"], "Saldkrējuma sviests LATGALE, 200 g, 82,5%")
+        # Maxima's own sale price per kg, not the regular one after it.
+        self.assertEqual((product["unit_price"], product["unit"]), ("5.95", "€/kg"))
+
+    def test_a_per_piece_unit_price_is_removed_but_not_used(self):
+        title, unit_price, unit = maxima_scraper.split_title("Hig. tamponi TAMPAX 16gab. (0.25 €/gab); (0.36 €/gab)")
+
+        self.assertEqual((title, unit_price, unit), ("Hig. tamponi TAMPAX 16gab.", None, None))
+
+    def test_a_from_price_is_removed_but_not_used(self):
+        title, unit_price, unit = maxima_scraper.split_title("Musli SANTE, 350 g, ar riekstiem vai tumšo šokolādi (no 8,54 €/kg)")
+
+        self.assertEqual((title, unit_price, unit), ("Musli SANTE, 350 g, ar riekstiem vai tumšo šokolādi", None, None))
+
+    def test_empty_unit_prices_are_removed(self):
+        self.assertEqual(maxima_scraper.split_title("Pieni RASĒNS UHT 1,5% 24x200ml (€/l); (€/l)")[0], "Pieni RASĒNS UHT 1,5% 24x200ml")
+
     def test_a_category_banner_has_no_price(self):
         item = element('<div class="offer-item"><div class="item-title-text">Apakšveļai un pidžamām</div></div>')
 
