@@ -19,8 +19,8 @@ class AdminUserController extends Controller
         $users = User::query()
             ->withCount(['shoppingLists', 'watchedProducts'])
             ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
-                ->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")))
+                ->whereContains('name', $search)
+                ->orWhereContains('email', $search)))
             ->orderByDesc('is_admin')
             ->orderBy('name')
             ->paginate(25)

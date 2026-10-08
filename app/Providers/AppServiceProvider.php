@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -29,6 +30,29 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         Gate::define('admin', fn (User $user): bool => $user->is_admin);
+
+        $this->configureContainsSearch();
+    }
+
+    /**
+     * ->whereContains('title', $text) / ->orWhereContains(...): rows whose column contains the
+     * text exactly as typed. A plain LIKE treats % and _ in user input as wildcards, so typing
+     * "%" would match everything. '!' is the escape character because a backslash means
+     * different things in MySQL and SQLite.
+     */
+    protected function configureContainsSearch(): void
+    {
+        $contains = function (string $boolean) {
+            return function (string $column, string $text) use ($boolean) {
+                /** @var QueryBuilder $this */
+                $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $text);
+
+                return $this->whereRaw($this->getGrammar()->wrap($column)." LIKE ? ESCAPE '!'", ["%{$escaped}%"], $boolean);
+            };
+        };
+
+        QueryBuilder::macro('whereContains', $contains('and'));
+        QueryBuilder::macro('orWhereContains', $contains('or'));
     }
 
     /**

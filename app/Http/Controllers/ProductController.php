@@ -163,7 +163,7 @@ class ProductController extends Controller
     private function filteredQuery(array $filters): Builder
     {
         return Product::query()->onOffer()
-            ->when($filters['query'] !== '', fn (Builder $products) => $products->where('title', 'like', "%{$filters['query']}%"))
+            ->when($filters['query'] !== '', fn (Builder $products) => $products->whereContains('title', $filters['query']))
             ->when($filters['store'] !== '', fn (Builder $products) => $products->where('store', $filters['store']))
             ->when($filters['category'] !== '', fn (Builder $products) => $products->where('category', $filters['category']));
     }

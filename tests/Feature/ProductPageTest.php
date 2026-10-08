@@ -110,3 +110,19 @@ test('ended offers are hidden from the product list but their page says the offe
         ->assertOk()
         ->assertSee('Šis piedāvājums beidzās', false);
 });
+
+test('search treats % and _ as normal characters, not wildcards', function () {
+    $this->actingAs(User::factory()->create());
+    Product::query()->create(['title' => 'Piens 2.5%', 'store' => 'rimi.lv', 'current_price' => 0.99]);
+    Product::query()->create(['title' => 'Maize', 'store' => 'rimi.lv', 'current_price' => 1.29]);
+    Product::query()->create(['title' => 'Sula 1_5L', 'store' => 'rimi.lv', 'current_price' => 1.99]);
+    Product::query()->create(['title' => 'Sula 105L', 'store' => 'rimi.lv', 'current_price' => 1.99]);
+
+    $this->get(route('products.search', ['q' => '%']))
+        ->assertSee('Piens 2.5%')
+        ->assertDontSee('Maize');
+
+    $this->get(route('products.search', ['q' => '1_5']))
+        ->assertSee('Sula 1_5L')
+        ->assertDontSee('Sula 105L');
+});
