@@ -73,13 +73,28 @@
 
     --color-ink: #1b1024;
     --color-plum: #3b1a4a;
+    /* Fixed end of the orange button gradient, the same in light and dark mode */
+    --color-citrus: #ff7a3d;
 
     --color-accent: #ffb13b;
-    --color-accent-content: #ffb13b;
+    --color-accent-content: #c2410c;
     --color-accent-foreground: #1b1024;
 }
 
 @layer theme {
+    /*
+     * Light mode: the bright citrus / mint / coral shades are built for a dark
+     * background, so the shades views use for text are darkened to stay readable on white.
+     */
+    html:not(.dark) {
+        --color-emerald-600: #c2410c;
+        --color-emerald-700: #9a3412;
+        --color-green-400: #15803d;
+        --color-green-500: #15803d;
+        --color-green-600: #15803d;
+        --color-red-400: #c62828;
+    }
+
     .dark {
         --color-accent: #ffb13b;
         --color-accent-content: #ffb13b;
@@ -91,8 +106,17 @@ body {
     font-family: var(--font-sans);
 }
 
-/* Default text colour so plain text and links never fall back to browser black */
-.dark body {
+/* Dark native controls (select popups, scrollbars) instead of the light defaults */
+.dark {
+    color-scheme: dark;
+}
+
+/*
+ * Default text colour so plain text and links never fall back to browser black.
+ * <dialog> (Flux modals) gets its own colour from the browser, so it needs it too.
+ */
+.dark body,
+.dark dialog {
     color: var(--color-zinc-100);
 }
 
@@ -153,7 +177,7 @@ select:focus[data-flux-control] {
 }
 
 .auth-citrus [data-flux-button][type='submit'] {
-    @apply h-12 rounded-xl border-0 bg-linear-to-r from-emerald-400 to-emerald-700 font-semibold text-ink transition hover:brightness-110;
+    @apply h-12 rounded-xl border-0 bg-linear-to-r from-emerald-400 to-citrus font-semibold text-ink transition hover:brightness-110;
 }
 
 .auth-citrus [data-flux-link] {

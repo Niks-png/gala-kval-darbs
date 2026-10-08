@@ -30,7 +30,7 @@
                 </select>
             </div>
             <input type="hidden" name="period" value="{{ $period }}" />
-            <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-4 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
+            <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-citrus px-4 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
                 {{ __('Filtrēt') }}
             </button>
         </form>

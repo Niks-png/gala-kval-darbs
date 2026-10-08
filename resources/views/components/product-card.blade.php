@@ -28,7 +28,7 @@
             <flux:text class="mt-1">{{ $product->store }}</flux:text>
 
             <div class="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span class="text-2xl font-bold tabular-nums text-zinc-100">
+                <span class="text-2xl font-bold tabular-nums text-zinc-900 dark:text-zinc-100">
                     {{ $product->current_price !== null ? $euro($product->current_price) : '—' }}
                 </span>
                 @if ($previousPrice !== null)
@@ -66,7 +66,7 @@
                 @csrf
                 <input type="hidden" name="_method" value="{{ $watched ? 'DELETE' : 'POST' }}">
                 <button type="submit"
-                    class="flex size-8 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-emerald-950 hover:text-emerald-400 group-data-watching:text-emerald-400"
+                    class="flex size-8 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-emerald-50 hover:text-emerald-700 group-data-watching:text-emerald-700 dark:hover:bg-emerald-950 dark:hover:text-emerald-400 dark:group-data-watching:text-emerald-400"
                     aria-pressed="{{ $watched ? 'true' : 'false' }}"
                     aria-label="{{ $watched ? __('Pārtraukt sekot cenai') : __('Sekot cenai') }}"
                     title="{{ $watched ? __('Pārtraukt sekot cenai') : __('Sekot cenai') }}"

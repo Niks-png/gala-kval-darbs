@@ -77,9 +77,9 @@
                             </span>
                             <div class="min-w-0">
                                 <flux:heading size="sm" class="flex flex-wrap items-center gap-2">
-                                    <a href="{{ route('products.show', $data['product_id']) }}" wire:navigate class="hover:text-emerald-400">{{ $data['title'] }}</a>
+                                    <a href="{{ route('products.show', $data['product_id']) }}" wire:navigate class="hover:text-emerald-700 dark:hover:text-emerald-400">{{ $data['title'] }}</a>
                                     @if ($alert->read_at === null)
-                                        <span class="rounded-full bg-emerald-400/15 px-2 py-0.5 text-xs font-semibold text-emerald-400">{{ __('Jauns') }}</span>
+                                        <span class="rounded-full bg-emerald-400/15 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">{{ __('Jauns') }}</span>
                                     @endif
                                 </flux:heading>
                                 <flux:text class="font-mono text-sm tabular-nums">
@@ -112,7 +112,7 @@
                     @foreach ($watchedProducts as $watched)
                         <div class="flex items-center justify-between gap-3 px-4 py-3">
                             <div class="min-w-0">
-                                <a href="{{ route('products.show', $watched) }}" wire:navigate class="block truncate text-sm font-medium text-zinc-100 hover:text-emerald-400">{{ $watched->title }}</a>
+                                <a href="{{ route('products.show', $watched) }}" wire:navigate class="block truncate text-sm font-medium text-zinc-900 hover:text-emerald-700 dark:text-zinc-100 dark:hover:text-emerald-400">{{ $watched->title }}</a>
                                 <flux:text class="text-xs">
                                     {{ $watched->store }} · <span class="font-mono tabular-nums">{{ $watched->current_price !== null ? lv_number($watched->current_price).' €' : '—' }}</span>
                                 </flux:text>

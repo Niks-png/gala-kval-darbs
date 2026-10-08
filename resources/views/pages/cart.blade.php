@@ -16,7 +16,7 @@
                 <input type="text" name="name" id="name" required placeholder="{{ __('Piem., Nedēļas iepirkumi') }}"
                     class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900" />
             </div>
-            <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-4 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
+            <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-citrus px-4 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
                 {{ __('Izveidot sarakstu') }}
             </button>
         </form>

@@ -14,13 +14,13 @@
                     placeholder="Piemēram, kartupeļi, piens vai vista"
                     class="min-h-10 flex-1 rounded-lg border border-neutral-300 bg-transparent px-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-600"
                 >
-                <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-5 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
+                <button type="submit" class="rounded-lg bg-linear-to-r from-emerald-400 to-citrus px-5 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
                     Pievienot
                 </button>
             </form>
             <div id="ingredient-list" class="mt-3 flex flex-wrap gap-2"></div>
             <div class="mt-4 flex flex-wrap items-center gap-3">
-                <button id="find-recipes" type="button" class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-5 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
+                <button id="find-recipes" type="button" class="rounded-lg bg-linear-to-r from-emerald-400 to-citrus px-5 py-2 text-sm font-semibold text-ink transition hover:brightness-110">
                     Meklēt receptes
                 </button>
                 <button id="clear-ingredients" type="button" class="text-sm text-neutral-500 underline-offset-4 hover:underline">
@@ -135,7 +135,7 @@
                             <div class="p-4">
                                 <h2 class="font-semibold">${escapeHtml(meal.strMeal)}</h2>
                                 <p class="mt-1 text-xs text-neutral-500">Atbilst ${meal.matches} no ${ingredients.length} produktiem</p>
-                                <button type="button" data-recipe="${meal.idMeal}" class="mt-4 rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-4 py-2 text-sm font-semibold text-ink hover:brightness-110">Skatīt recepti</button>
+                                <button type="button" data-recipe="${meal.idMeal}" class="mt-4 rounded-lg bg-linear-to-r from-emerald-400 to-citrus px-4 py-2 text-sm font-semibold text-ink hover:brightness-110">Skatīt recepti</button>
                             </div>
                         </article>
                     `).join('');
@@ -223,7 +223,7 @@
                         </ul>
                         <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
                             <span>Kopā: <strong data-total></strong></span>
-                            <button type="button" data-add-to-list class="rounded-lg bg-linear-to-r from-emerald-400 to-emerald-700 px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-50">Pievienot sarakstam</button>
+                            <button type="button" data-add-to-list class="rounded-lg bg-linear-to-r from-emerald-400 to-citrus px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-50">Pievienot sarakstam</button>
                         </div>
                         <p data-add-result class="mt-2 hidden text-sm"></p>
                     `;

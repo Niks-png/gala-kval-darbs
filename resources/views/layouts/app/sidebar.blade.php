@@ -1,8 +1,13 @@
 @php($notificationCount = auth()->user()->shoppingListInvitations()->count() + auth()->user()->unreadNotifications()->count())
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
+        {{-- Dark is the default until the user picks light with the theme toggle --}}
+        <script>
+            if (! window.localStorage.getItem('flux.appearance')) window.localStorage.setItem('flux.appearance', 'dark');
+        </script>
+        @fluxAppearance
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-950">
         <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
@@ -62,6 +67,11 @@
 
             <flux:spacer />
 
+            <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" variant="subtle" square :aria-label="__('Pārslēgt gaišo / tumšo režīmu')" :tooltip="__('Gaišais / tumšais režīms')">
+                <flux:icon.sun variant="mini" class="hidden dark:block" />
+                <flux:icon.moon variant="mini" class="dark:hidden" />
+            </flux:button>
+
             <flux:navbar>
                 <flux:navbar.item
                     icon="bell"
@@ -87,6 +97,11 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
+
+            <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" variant="subtle" square :aria-label="__('Pārslēgt gaišo / tumšo režīmu')" :tooltip="__('Gaišais / tumšais režīms')">
+                <flux:icon.sun variant="mini" class="hidden dark:block" />
+                <flux:icon.moon variant="mini" class="dark:hidden" />
+            </flux:button>
 
             <flux:navbar>
                 <flux:navbar.item
