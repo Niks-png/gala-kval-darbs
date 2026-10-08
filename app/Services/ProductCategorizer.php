@@ -36,8 +36,26 @@ class ProductCategorizer
                 'ĶERMEŅA', 'ĶERM', 'SEJAS', 'SEJ', 'ROKU', 'MATU', 'SKŪŠANĀS', 'SKŪŠ', 'SKUVEKLIS', 'SKUVEKĻI', 'SKUV',
                 'BALZAMS', 'KONDIC', 'KONDICIONIERIS', 'HIGIĒNISKĀS', 'HIG', 'IELIKTNĪŠI', 'IELIKTN', 'PREZERVATĪVI',
                 'LOSJONS', 'MICEL', 'DEPILĀC', 'VATES', 'LŪPU', 'NAGU', 'KOSM', 'TUALETES ŪDENS', 'SMARŽAS',
-                'NAKTS KRĒMS', 'DIENAS KRĒMS',
+                'NAKTS KRĒMS', 'DIENAS KRĒMS', 'TAMPONI', 'SERUMS', 'ACU KRĒMS', 'MASKA',
             ],
+        ],
+        'Uztura bagātinātāji' => [
+            'strong' => ['UZTURA', 'VITAMĪNI', 'KOLAGĒNS', 'MAGNIJS'],
+        ],
+        'Apģērbi' => [
+            'strong' => [
+                'ZEĶES', 'ZEĶĪTES', 'ZEĶBIKSES', 'ZEĶUBIKSES', 'ZEĶBIK', 'ZEĶB', 'APAKŠBIKSES', 'BOKSERŠORTI', 'LEGINGI',
+                'PIDŽAMA', 'KREKLS', 'ČĪBAS', 'CEPURE', 'ŠALLE', 'DŽEMPERIS', 'BIKSES', 'KRŪŠTURIS',
+                'DARBA CIMDI', 'CIMDI', 'APAKŠVEĻA',
+            ],
+            'weak' => ['SIEVIEŠU', 'SIEV', 'VĪRIEŠU'],
+        ],
+        'Rotaļlietas un hobiji' => [
+            'strong' => ['ROTAĻLIETA', 'ROTAĻLIETAS', 'ROTAĻU', 'LEGO', 'KONSTR', 'KONSTRUKTORS', 'PUZLE', 'RADOŠAIS', 'KRĀSOJAMĀ'],
+            'weak' => ['HELOVĪNA'],
+        ],
+        'Elektronika' => [
+            'strong' => ['KABELIS', 'AUSTIŅAS', 'LĀDĒTĀJS', 'BEZVADU', 'SPULDZE', 'LUKTURIS', 'POWERBANK'],
         ],
         'Mājsaimniecības preces' => [
             'strong' => [
@@ -45,12 +63,17 @@ class ProductCategorizer
                 'PAPĪRA', 'PAPĪRS', 'DVIEĻI', 'DVIELIS', 'MAISI', 'ATKR', 'GAISA', 'BATERIJAS', 'ŪDENS MĪKSTINĀTĀJS',
                 'MĪKST', 'MĪKSTINĀTĀJS', 'LĪDZ', 'LĪDZEKLIS', 'TR', 'SMARŽU GRANULAS', 'SVECES', 'SŪKLIS', 'SŪKĻI',
                 'REPELENTS', 'UNIV', 'UNIVERS', 'LOGU', 'STIKLU', 'TRAIPU', 'VIRT',
+                // Kitchenware, home and decorations
+                'SVECE', 'PANNA', 'KATLS', 'NAZIS', 'NAŽI', 'KAROTE', 'KAROTES', 'DAKŠAS', 'ŠĶĪVIS', 'ŠĶĪVJI', 'TRAUKS',
+                'BĻODA', 'KRŪZE', 'GLĀZE', 'GLĀZES', 'VĀKS', 'RĪVE', 'CEPAMFORMA', 'ĀMURS', 'GRIEŠANAS DĒLĪTIS',
+                'UZGLABĀŠANAS', 'UZGLAB', 'KASTE', 'VIRTENE', 'DIFUZORS', 'DEKORĀCIJA', 'UZLĪMES', 'LUPATIŅA', 'LUPATIŅAS',
+                'MIKROŠĶ', 'MIKROŠĶIEDRAS', 'MOPS', 'BIRSTE', 'SLOTA', 'SPAINIS',
             ],
         ],
         'Dzērieni' => [
             'strong' => [
                 'DZĒRIENS', 'DZĒRIENI', 'DZĒR', 'SULA', 'NEKTĀRS', 'ŪDENS', 'MINERĀLŪDENS', 'LIMONĀDE', 'KAFIJA',
-                'TĒJA', 'ALUS', 'SIDRS', 'VĪNS', 'KOKTEILIS', 'KOKT', 'BEZALK', 'KVASS', 'SMŪTIJS',
+                'TĒJA', 'ALUS', 'SIDRS', 'VĪNS', 'KOKTEILIS', 'KOKT', 'BEZALK', 'KVASS', 'SMŪTIJS', 'KAF', 'GĀZ',
             ],
             'weak' => ['KAFIJAS', 'TĒJAS', 'KAKAO', 'ENERĢIJAS', 'SULAS'],
         ],
@@ -59,7 +82,8 @@ class ProductCategorizer
                 'ŠOKOLĀDE', 'ŠOK', 'ŠOKOL', 'KONFEKTES', 'KONF', 'ŽELEJKONFEKTES', 'CEPUMI', 'VAFELES', 'ZEFĪRS',
                 'MARSHMALLOW', 'DRAŽEJAS', 'KARAMELES', 'LEDENES', 'GUMIJA', 'BATONIŅŠ', 'BATONIŅI', 'BAT', 'BATON',
                 'SALDĒJUMS', 'DESERTS', 'PUDIŅŠ', 'KŪKA', 'TORTE', 'TORTĪNE', 'NAŠĶIS', 'SAUSIŅI', 'IEVĀRĪJUMS',
-                'DŽEMS', 'MEDUS', 'KAKAO KRĒMS', 'MUSS', 'LED', 'SMALKMAIZĪTES', 'KĒKSS', 'BISKVĪTS', 'VIRTULIS',
+                'DŽEMS', 'MEDUS', 'KAKAO KRĒMS', 'MUSS', 'LED', 'SMALKMAIZĪTES', 'KĒKSS', 'BISKVĪTS', 'VIRTULIS', 'KŪCIŅAS',
+                'KONFEKŠU KĀRBA', 'VAFEĻU TRUBIŅAS', 'VAFEĻU RULLĪŠI', 'MUSLI BATONIŅŠ',
             ],
             'weak' => ['ŠOKOLĀDES', 'BISKVĪTA', 'SALDĒJUMA'],
         ],
@@ -89,7 +113,7 @@ class ProductCategorizer
             'strong' => [
                 'PIENS', 'KEFĪRS', 'SIERS', 'SIERI', 'SIERIŅŠ', 'SIERIŅI', 'KRĒMSIERS', 'JOGURTS', 'JOGURTI', 'KRĒJUMS',
                 'SALDKRĒJUMS', 'PUTUKRĒJUMS', 'SVIESTS', 'BIEZPIENS', 'PANIŅAS', 'RŪGUŠPIENS', 'MARGARĪNS', 'OLAS',
-                'MOCARELLA', 'MOZZARELLA',
+                'MOCARELLA', 'MOZZARELLA', 'BIEZP', 'JOG', 'PIENI',
             ],
             'weak' => ['PIENA', 'SIERA', 'BIEZPIENA', 'JOGURTA', 'KRĒJUMA', 'SVIESTA', 'KEFĪRA'],
         ],
@@ -97,7 +121,7 @@ class ProductCategorizer
             'strong' => [
                 'GAĻA', 'CŪKGAĻA', 'DESA', 'DESAS', 'DESIŅAS', 'DESIŅA', 'DŪMDESA', 'CĪSIŅI', 'SARDELES', 'ŠĶIŅĶIS',
                 'ŠĶIŅĶI', 'BEKONS', 'SALAMI', 'SERVELĀDE', 'KARBONĀDE', 'ŠAŠLIKS', 'SPĀRNI', 'PUSSPĀRNI', 'STILBI',
-                'STILBIŅI', 'STEIKS', 'GULAŠS', 'VISTA', 'TĪTARS', 'SPEĶIS', 'AKNAS',
+                'STILBIŅI', 'STEIKS', 'GULAŠS', 'VISTA', 'TĪTARS', 'SPEĶIS', 'AKNAS', 'DOKTORDESA',
             ],
             'weak' => ['CŪKGAĻAS', 'LIELLOPA', 'LIELLOPU', 'VISTAS', 'CĀĻA', 'CĀĻU', 'TĪTARA', 'TEĻA', 'JĒRA', 'TRUŠA', 'PĪLES', 'GAĻAS'],
         ],
@@ -111,14 +135,14 @@ class ProductCategorizer
         'Maize un maizes izstrādājumi' => [
             'strong' => [
                 'MAIZE', 'BALTMAIZE', 'RUDZUMAIZE', 'SALDSKĀBMAIZE', 'TOSTERMAIZE', 'SAUSMAIZĪTES', 'MAIZĪTES', 'BAGETE',
-                'BULCIŅA', 'BULCIŅAS', 'KLAIPS', 'LAVAŠS', 'TORTILJAS', 'KRUASĀNS', 'KRUASĀNI', 'PITA',
+                'BULCIŅA', 'BULCIŅAS', 'KLAIPS', 'LAVAŠS', 'TORTILJAS', 'KRUASĀNS', 'KRUASĀNI', 'PITA', 'GARDMAIZE',
             ],
             'weak' => ['MAIZES', 'KRUASANA'],
         ],
         'Graudaugi, makaroni un milti' => [
             'strong' => [
                 'MILTI', 'RĪSI', 'MAKARONI', 'SPAGETI', 'SPAGHETTI', 'NŪDELES', 'GRIĶI', 'PĀRSLAS', 'PĀRSL', 'PUTRAIMI',
-                'PUTRA', 'BROKASTIS', 'BROK', 'MANNA', 'CUKURS', 'KUSKUSS', 'BULGURS', 'KVINOJA',
+                'PUTRA', 'BROKASTIS', 'BROK', 'MANNA', 'CUKURS', 'KUSKUSS', 'BULGURS', 'KVINOJA', 'MUSLI', 'MUSLS',
             ],
             'weak' => ['AUZU', 'RĪSU', 'KVIEŠU', 'RUDZU', 'GRIĶU'],
         ],

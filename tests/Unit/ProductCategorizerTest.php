@@ -26,6 +26,25 @@ test('products are categorized by what they are, not by flavour', function (stri
     ['ZOBU PASTA COLGATE MAX FRESH 75ML', 'Higiēna un kosmētika'],
     ['Dušas želeja PALMOLIVE Fig&Milk 500ml', 'Higiēna un kosmētika'],
 
+    // Non-food goods, and words that mean something else outside food.
+    ['Siev. zeķb. Favorite 50 d 42141 nero 4', 'Apģērbi'],
+    ['Bērnu zeķes Mywear garās 3p 31/33', 'Apģērbi'],
+    ['Pusdienu šķīvis Luminarc 25cm AW26', 'Mājsaimniecības preces'],
+    ['Maizes nazis Berlinger Haus 20cm AW26', 'Mājsaimniecības preces'],
+    ['Gaismas virtene, 120 LED, krāsaina CH26', 'Mājsaimniecības preces'],
+    ['Svece Cozy Home ķirbis D10xh6.5cm HW26', 'Mājsaimniecības preces'],
+    ['Konstr. Lego Cūkas Mazuļu Māja 21268', 'Rotaļlietas un hobiji'],
+    ['Bezvadu USB datorpele Havit MS78GT', 'Elektronika'],
+    ['UZTURA BAGĀTINĀTĀJS MÖLLERS ZIVJU EĻĻA ORĢINĀLĀ GARŠA 250ML', 'Uztura bagātinātāji'],
+    ['Cūkgaļas lāpstiņa Forevers marin., kūpin. kg', 'Gaļa un gaļas izstrādājumi'],
+
+    // Shop abbreviations.
+    ['Jog. SKYR ISLANDES bez pied. 400g', 'Piena produkti un olas'],
+    ['Biezp. Annele amfora prot.ar mango 0,8 % 200g', 'Piena produkti un olas'],
+    ['Kaf. pupiņas Andrito Brasil Bella Giana 250g', 'Dzērieni'],
+    ['Gāz. dz. SPRITE Chill Zero 0,33L', 'Dzērieni'],
+    ['MUSLI BATONIŅŠ NESTLE ZEMEŅU 35G', 'Saldumi un deserti'],
+
     // Plain products.
     ['PIENS OPĀ 2.5% 0.9L', 'Piena produkti un olas'],
     ['KEFĪRS TIP TOP 2.5% 1KG', 'Piena produkti un olas'],
