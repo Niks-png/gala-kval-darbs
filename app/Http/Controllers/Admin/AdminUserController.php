@@ -14,7 +14,8 @@ class AdminUserController extends Controller
 {
     public function index(Request $request): View
     {
-        $search = trim((string) $request->query('q'));
+        // ?q[]=x sends an array; treat anything but text as no search instead of crashing.
+        $search = is_string($q = $request->query('q')) ? trim($q) : '';
 
         $users = User::query()
             ->withCount(['shoppingLists', 'watchedProducts'])

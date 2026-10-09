@@ -58,7 +58,7 @@
                         id="header-search"
                         type="search"
                         name="q"
-                        value="{{ request('q') }}"
+                        value="{{ is_string(request('q')) ? request('q') : '' }}"
                         placeholder="{{ __('Meklēt produktus') }}"
                         class="w-full rounded-full border border-zinc-300 bg-white py-2 ps-9 pe-4 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
                     >

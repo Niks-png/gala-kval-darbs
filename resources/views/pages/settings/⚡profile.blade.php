@@ -3,7 +3,9 @@
 use App\Concerns\ProfileValidationRules;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -37,6 +39,20 @@ new #[Title('Profila iestatījumi')] class extends Component {
         $emailChanged = $user->isDirty('email');
 
         if ($emailChanged) {
+            // Each change emails the new address, so without a limit this form could send mail
+            // to any number of strangers from the site's account (like sign-up, see LimitEmailSendingForms).
+            $key = "email-change:{$user->id}";
+
+            if (RateLimiter::tooManyAttempts($key, 5)) {
+                throw ValidationException::withMessages([
+                    'email' => __('Pārāk daudz mēģinājumu. Mēģini vēlreiz pēc :minutes min.', [
+                        'minutes' => (int) ceil(RateLimiter::availableIn($key) / 60),
+                    ]),
+                ]);
+            }
+
+            RateLimiter::hit($key, 3600);
+
             $user->email_verified_at = null;
         }
 

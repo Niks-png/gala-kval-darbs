@@ -58,7 +58,9 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureRateLimiting(): void
     {
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            // The limiter runs before validation, so a non-text email (e.g. an array) must not crash it.
+            $username = $request->input(Fortify::username());
+            $throttleKey = Str::transliterate(Str::lower(is_string($username) ? $username : '').'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
         });

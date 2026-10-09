@@ -103,6 +103,10 @@ class ShoppingListController extends Controller
 
         Gate::authorize('editItems', $list);
 
+        if ($product->offerHasEnded()) {
+            return back()->with('error', __('Šis piedāvājums ir beidzies, to vairs nevar pievienot sarakstam.'));
+        }
+
         if (! $list->addProduct($product->id, (int) $validated['quantity'])) {
             return back()->with('error', __('Saraksts jau ir pabeigts.'));
         }
@@ -174,6 +178,14 @@ class ShoppingListController extends Controller
 
     public function quickAdd(Request $request, Product $product): RedirectResponse|JsonResponse
     {
+        if ($product->offerHasEnded()) {
+            $message = __('Šis piedāvājums ir beidzies, to vairs nevar pievienot sarakstam.');
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $message], 422)
+                : back()->with('error', $message);
+        }
+
         $this->addToActiveList($request, [$product->id]);
 
         if ($request->expectsJson()) {
@@ -186,6 +198,11 @@ class ShoppingListController extends Controller
     public function increase(Request $request, ShoppingList $shoppingList, Product $product): RedirectResponse
     {
         Gate::authorize('editItems', $shoppingList);
+
+        // More of an item already on the list is fine; a new item must still be on offer.
+        if ($product->offerHasEnded() && ! $shoppingList->products()->whereKey($product->id)->exists()) {
+            return to_route('cart.show', $shoppingList)->with('error', __('Šis piedāvājums ir beidzies, to vairs nevar pievienot sarakstam.'));
+        }
 
         return $this->afterItemChange($shoppingList, $shoppingList->addProduct($product->id));
     }

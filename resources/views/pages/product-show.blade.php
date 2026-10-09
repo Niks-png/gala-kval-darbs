@@ -82,7 +82,9 @@
                 </div>
 
                 <div class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-                    @if ($lists->isEmpty())
+                    @if ($product->offerHasEnded())
+                        <flux:text>{{ __('Piedāvājums ir beidzies, tāpēc to nevar pievienot sarakstam.') }}</flux:text>
+                    @elseif ($lists->isEmpty())
                         <flux:text>{{ __('Tev nav neviena atvērta saraksta, kurā pievienot produktu.') }}</flux:text>
                         <a href="{{ route('cart') }}" wire:navigate class="mt-2 inline-block text-sm font-medium text-emerald-600">{{ __('Izveidot sarakstu') }}</a>
                     @else

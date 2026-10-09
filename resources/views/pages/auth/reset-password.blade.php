@@ -13,7 +13,7 @@
             <!-- Email Address -->
             <flux:input
                 name="email"
-                value="{{ request('email') }}"
+                value="{{ is_string(request('email')) ? request('email') : '' }}"
                 :label="__('E-pasts')"
                 type="email"
                 required

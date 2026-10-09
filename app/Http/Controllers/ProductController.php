@@ -138,10 +138,13 @@ class ProductController extends Controller
      */
     private function filters(Request $request): array
     {
+        // Anything but text (e.g. ?q[]=x sends an array) counts as no filter instead of crashing the page.
+        $text = fn (string $key): string => is_string($value = $request->query($key)) ? trim($value) : '';
+
         return [
-            'query' => trim((string) $request->string('q')),
-            'store' => trim((string) $request->string('store')),
-            'category' => trim((string) $request->string('category')),
+            'query' => $text('q'),
+            'store' => $text('store'),
+            'category' => $text('category'),
         ];
     }
 
