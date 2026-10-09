@@ -7,7 +7,7 @@
             @if ($days === $current) aria-current="true" @endif
             @class([
                 'rounded-full px-3 py-1 transition',
-                'bg-emerald-600 text-white' => $days === $current,
+                'bg-emerald-600 font-semibold text-white dark:bg-emerald-400 dark:text-ink' => $days === $current,
                 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800' => $days !== $current,
             ])>{{ __($label) }}</a>
     @endforeach
