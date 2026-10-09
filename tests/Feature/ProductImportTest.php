@@ -2,8 +2,7 @@
 
 use App\Models\Product;
 use App\Models\ProductPriceHistory;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 test('scraped products are imported and existing products are updated', function () {
     $csvPath = tempnam(sys_get_temp_dir(), 'products-');
@@ -212,15 +211,20 @@ test('a failure halfway through the import leaves prices, ended offers and histo
     importCsv("Piens,rimi.lv,,1.39,,\nMaize,rimi.lv,,0.99,,");
     $this->travel(1)->day();
 
-    // Make saving the price history fail after the import has started.
-    Schema::rename('product_price_histories', 'product_price_histories_gone');
+    // Make saving the price history fail after prices were written and offers ended. Not by
+    // renaming the table: MySQL commits the open transaction on any table change, so the
+    // rollback being tested would never happen there.
+    DB::beforeExecuting(function (string $query): void {
+        if (preg_match('/^insert into .product_price_histories./i', $query)) {
+            throw new RuntimeException('Saving price history failed.');
+        }
+    });
 
     $csvPath = tempnam(sys_get_temp_dir(), 'products-');
     file_put_contents($csvPath, "title,store,original_price,current_price,unit_price,unit\nPiens,rimi.lv,,1.19,,\n");
 
-    expect(fn () => $this->artisan('products:import', ['file' => $csvPath, '--force' => true])->run())->toThrow(QueryException::class);
-
-    Schema::rename('product_price_histories_gone', 'product_price_histories');
+    expect(fn () => $this->artisan('products:import', ['file' => $csvPath, '--force' => true])->run())
+        ->toThrow(RuntimeException::class, 'Saving price history failed.');
 
     expect(Product::query()->where('title', 'Piens')->sole()->current_price)->toBe('1.39')
         ->and(Product::query()->where('title', 'Maize')->sole()->offerHasEnded())->toBeFalse();

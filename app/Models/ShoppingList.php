@@ -51,15 +51,20 @@ class ShoppingList extends Model
     public function addProduct(int $productId, int $quantity = 1): bool
     {
         return $this->changeWhileOpen(function () use ($productId, $quantity): void {
-            // One UPDATE that adds to the stored value, so two editors adding at once both count.
-            $updated = $this->items($productId)->update([
+            // Checked under the list lock, so no other change can add the item in between. Not
+            // judged by the UPDATE's row count: MySQL counts only rows that changed, so an item
+            // already at the limit would look missing and be inserted twice.
+            if (! $this->items($productId)->exists()) {
+                $this->products()->attach($productId, ['quantity' => min($quantity, self::MAX_QUANTITY)]);
+
+                return;
+            }
+
+            // Adds to the stored value in the database, up to the limit.
+            $this->items($productId)->update([
                 'quantity' => DB::raw('CASE WHEN quantity + '.$quantity.' > '.self::MAX_QUANTITY.' THEN '.self::MAX_QUANTITY.' ELSE quantity + '.$quantity.' END'),
                 'updated_at' => now(),
             ]);
-
-            if ($updated === 0) {
-                $this->products()->attach($productId, ['quantity' => min($quantity, self::MAX_QUANTITY)]);
-            }
         });
     }
 
